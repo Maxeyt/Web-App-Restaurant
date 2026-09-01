@@ -1,0 +1,68 @@
+﻿@page "{id:int}"
+@model MaxFood.Pages.Promotion.DetailsModel
+@{
+    ViewData["Title"] = Model.Promotion?.PromotionName ?? "Детали акции";
+}
+<div style="display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px;">
+    <a href="#" onclick="history.back(); return false;" style="position: absolute; left: 0; font-size: 0.85rem; color: #28a745; text-decoration: none; display: flex; align-items: center; gap: 5px; font-weight: 500;">
+        <i class="bi bi-arrow-left"></i> <span>Назад</span>
+    </a>
+    <h2 style="margin: 0; font-size: 1.2rem; font-weight: 600;">@Model.Promotion?.PromotionName</h2>
+</div>
+<div class="container mt-3">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="bg-white p-4" style="border: 1px solid #dee2e6; border-radius: 12px;">
+                <div style="background-color: @(string.IsNullOrEmpty(Model.Promotion?.IconColor) ? "#28a745" : Model.Promotion.IconColor); padding: 20px; text-align: center; margin-bottom: 20px; border-radius: 12px;">
+                    @if (!string.IsNullOrEmpty(Model.Promotion?.IconImagePath))
+                    {
+                        <img src="@Model.Promotion.IconImagePath" style="max-width: 80px; max-height: 80px;">
+                    }
+                    else
+                    {
+                        <span style="font-size: 3rem;">@(string.IsNullOrEmpty(Model.Promotion?.IconEmoji) ? "🎁" : Model.Promotion.IconEmoji)</span>
+                    }
+                </div>
+                <h1 class="fw-bold text-center mb-3">@Model.Promotion?.PromotionName</h1>
+                @if (Model.Promotion?.DiscountType == "promocode" && !string.IsNullOrEmpty(Model.Promotion?.PromocodeValue))
+                {
+                    <div class="text-center mb-4">
+                        <div class="alert alert-info" style="background: #e8f5e9; border: 1px solid #28a745; border-radius: 12px;">
+                            <span class="fw-bold">Промокод:</span>
+                            <code id="promocodeText" style="font-size: 1.1rem; font-weight: bold; background: white; padding: 4px 12px; margin: 0 8px; border-radius: 8px;">@Model.Promotion.PromocodeValue</code>
+                            <button class="btn btn-sm btn-outline-success" style="border-radius: 6px;" onclick="copyPromocode()">📋 Копировать</button>
+                            <span class="badge bg-success ms-2">Примените при оформлении заказа</span>
+                        </div>
+                    </div>
+                }
+                else if (Model.Promotion?.DiscountPercent.HasValue == true && Model.Promotion.DiscountPercent.Value > 0)
+                {
+                    <div class="text-center mb-4">
+                        <span class="badge" style="background: #dc3545; font-size: 0.85rem; padding: 5px 14px; border-radius: 8px;">-@Model.Promotion.DiscountPercent.Value%</span>
+                    </div>
+                }
+                <div class="mb-4">
+                    <h4>Описание</h4>
+                    <p>@(string.IsNullOrEmpty(Model.Promotion?.Description) ? "Без описания" : Model.Promotion.Description)</p>
+                </div>
+                <div class="mb-4">
+                    <h4>Период действия</h4>
+                    <p>@Model.Promotion?.ValidFrom.ToString("dd.MM.yyyy") - @Model.Promotion?.ValidTo.ToString("dd.MM.yyyy")</p>
+                </div>
+                <div class="d-flex gap-3 justify-content-center mt-4">
+                    <a href="/Menu" class="btn px-4" style="background: #28a745; color: white; border-radius: 8px;">Сделать заказ</a>
+                    <a href="/Promotion/Index" class="btn px-4" style="background: transparent; border: 1px solid #6c757d; color: #6c757d; border-radius: 8px;">Все акции</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    function copyPromocode() {
+        const code = document.getElementById('promocodeText')?.innerText;
+        if (code) {
+            navigator.clipboard.writeText(code);
+            alert('Промокод скопирован: ' + code);
+        }
+    }
+</script>

@@ -1,0 +1,57 @@
+﻿@page
+@model MaxFood.Pages.FAQ.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>FAQ</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="FAQ.FAQId" />
+            <div class="form-group">
+<span class="text-danger">*</span>
+                <label asp-for="FAQ.Question" class="control-label"></label>
+                <input asp-for="FAQ.Question" class="form-control" aria-required="true"/>
+                <span asp-validation-for="FAQ.Question" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+<span class="text-danger">*</span>
+                <label asp-for="FAQ.Answer" class="control-label"></label>
+                <input asp-for="FAQ.Answer" class="form-control" aria-required="true"/>
+                <span asp-validation-for="FAQ.Answer" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAQ.DisplayOrder" class="control-label"></label>
+                <input asp-for="FAQ.DisplayOrder" class="form-control" />
+                <span asp-validation-for="FAQ.DisplayOrder" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="FAQ.IsActive" /> @Html.DisplayNameFor(model => model.FAQ.IsActive)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="FAQ.Category" class="control-label"></label>
+                <input asp-for="FAQ.Category" class="form-control" />
+                <span asp-validation-for="FAQ.Category" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

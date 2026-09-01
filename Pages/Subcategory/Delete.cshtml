@@ -1,0 +1,27 @@
+﻿@page
+@model MaxFood.Pages.Subcategory.DeleteModel
+@{
+    ViewData["Title"] = "Удалить подкатегорию";
+}
+
+<h1>Удалить подкатегорию</h1>
+
+<div class="alert alert-danger">
+    <h3>Вы уверены, что хотите удалить эту подкатегорию?</h3>
+    <p>Вместе с подкатегорией будут удалены все блюда в ней.</p>
+</div>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-2">Название</dt>
+        <dd class="col-sm-10">@Model.Subcategory.SubcategoryName</dd>
+        <dt class="col-sm-2">Категория</dt>
+        <dd class="col-sm-10">@Model.Subcategory.Category?.CategoryName</dd>
+    </dl>
+
+    <form method="post">
+        <input type="hidden" asp-for="Subcategory.SubcategoryId" />
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a asp-page="/Menu/Index" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>

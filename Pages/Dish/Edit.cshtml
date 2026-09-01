@@ -1,0 +1,694 @@
+﻿@page
+@model MaxFood.Pages.Dish.EditModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Редактирование блюда - MaxFood</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif !important;
+            letter-spacing: -0.2px;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f0ea 100%);
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .form-container {
+            max-width: 850px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #2b8c4a 0%, #1e6b38 100%);
+            padding: 28px 32px;
+            text-align: center;
+        }
+
+            .form-header h3 {
+                margin: 0;
+                font-size: 1.6rem;
+                font-weight: 700;
+                color: white;
+                letter-spacing: -0.3px;
+            }
+
+            .form-header p {
+                margin: 8px 0 0;
+                font-size: 0.8rem;
+                color: rgba(255,255,255,0.85);
+            }
+
+            .form-header i {
+                font-size: 2rem;
+                margin-bottom: 8px;
+                display: block;
+            }
+
+        .form-body {
+            padding: 32px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #2c3e2f;
+            margin: 20px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+            .section-title i {
+                color: #2b8c4a;
+                margin-right: 8px;
+            }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+            color: #2c3e2f;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 1.5px solid #e9ecef;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #2b8c4a;
+                box-shadow: 0 0 0 3px rgba(43,140,74,0.1);
+                outline: none;
+            }
+
+        .form-check-input:checked {
+            background-color: #2b8c4a;
+            border-color: #2b8c4a;
+        }
+
+        .variant-row {
+            background: #fafbfc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            border: 1px solid #e9ecef;
+            padding: 12px;
+        }
+
+            .variant-row:hover {
+                background: #f8f9fa;
+                border-color: #2b8c4a !important;
+            }
+
+        .btn-add-variant {
+            background: #f8f9fa;
+            border: 1.5px dashed #2b8c4a;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #2b8c4a;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+            .btn-add-variant:hover {
+                background: #e8f5e9;
+                border-color: #2b8c4a;
+                transform: translateY(-1px);
+            }
+
+        .btn-remove-variant {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: #dc3545;
+            transition: all 0.2s;
+        }
+
+            .btn-remove-variant:hover {
+                background: #dc3545;
+                color: white;
+                border-color: #dc3545;
+            }
+
+        .btn-save {
+            background: linear-gradient(135deg, #2b8c4a 0%, #236f3d 100%);
+            border: none;
+            border-radius: 14px;
+            padding: 14px 32px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+            transition: all 0.2s;
+        }
+
+            .btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(43,140,74,0.35);
+            }
+
+        .btn-cancel {
+            background: #f8f9fa;
+            border: 1.5px solid #dee2e6;
+            border-radius: 14px;
+            padding: 14px 32px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+            .btn-cancel:hover {
+                background: #e9ecef;
+                border-color: #adb5bd;
+            }
+
+        .field-error-message {
+            color: #dc3545;
+            font-size: 0.7rem;
+            margin-top: 4px;
+            display: block;
+        }
+
+        hr {
+            margin: 24px 0;
+            border-color: #e9ecef;
+        }
+
+        .preview-box {
+            width: 100px;
+            height: 100px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 2rem;
+            overflow: hidden;
+        }
+
+            .preview-box img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        @@media (max-width: 768px) {
+            .form-body {
+                padding: 20px;
+            }
+
+            .form-header {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <i class="bi bi-egg-fried"></i>
+                <h3>Редактирование блюда</h3>
+                <p>Измените информацию о блюде</p>
+            </div>
+            <div class="form-body">
+                <form method="post" asp-page-handler="Edit" enctype="multipart/form-data" id="dishForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Dish.DishId" />
+                    <input type="hidden" id="iconType" name="iconType" value="emoji" />
+                    <input type="hidden" id="emojiValue" name="emojiValue" value="" />
+                    <input type="hidden" id="colorValue" name="colorValue" value="" />
+
+                    <div class="section-title"><i class="bi bi-info-circle"></i> Основная информация</div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Dish.CategoryId" class="form-label">Категория <span class="text-danger">*</span></label>
+                                <select asp-for="Dish.CategoryId" class="form-select" id="CategoryId" asp-items="ViewBag.CategoryId">
+                                    <option value="">-- Выберите категорию --</option>
+                                </select>
+                                <span asp-validation-for="Dish.CategoryId" class="field-error-message"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Dish.SubcategoryId" class="form-label">Подкатегория</label>
+                                <select asp-for="Dish.SubcategoryId" class="form-select" id="SubcategoryId">
+                                    <option value="">-- Без подкатегории --</option>
+                                </select>
+                                <span asp-validation-for="Dish.SubcategoryId" class="field-error-message"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Dish.DishName" class="form-label">Название блюда <span class="text-danger">*</span></label>
+                        <input asp-for="Dish.DishName" class="form-control" id="DishName" placeholder="Например: Маргарита, Цезарь с курицей" />
+                        <span asp-validation-for="Dish.DishName" class="field-error-message"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Dish.ShortDescription" class="form-label">Краткое описание</label>
+                                <input asp-for="Dish.ShortDescription" class="form-control" placeholder="Сочная, острая, с грибами" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Dish.FullDescription" class="form-label">Полное описание</label>
+                                <textarea asp-for="Dish.FullDescription" class="form-control" rows="2" placeholder="Подробное описание блюда..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title"><i class="bi bi-bar-chart"></i> Состав и ценность</div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Dish.Ingredients" class="form-label">Ингредиенты</label>
+                                <input asp-for="Dish.Ingredients" class="form-control" placeholder="Тесто, соус, сыр, томаты" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Dish.NutritionalValue" class="form-label">Пищевая ценность</label>
+                                <input asp-for="Dish.NutritionalValue" class="form-control" placeholder="Б: 12г, Ж: 15г, У: 40г" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Dish.Calories" class="form-label">Калории (ккал)</label>
+                                <input asp-for="Dish.Calories" class="form-control" type="number" placeholder="350" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label asp-for="Dish.PreparationTime" class="form-label">Время приготовления (мин)</label>
+                                <input asp-for="Dish.PreparationTime" class="form-control" type="number" placeholder="20" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-title"><i class="bi bi-image"></i> Оформление блюда <span class="text-danger">*</span></div>
+
+                    <div class="form-group">
+                        <div class="d-flex gap-3 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="iconTypeRadio" id="iconTypeImage" value="image">
+                                <label class="form-check-label" for="iconTypeImage">Загрузить фото</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="iconTypeRadio" id="iconTypeEmoji" value="emoji" checked>
+                                <label class="form-check-label" for="iconTypeEmoji">Выбрать эмодзи</label>
+                            </div>
+                        </div>
+                        <span asp-validation-for="UploadedImage" class="field-error-message" id="imageValidationError"></span>
+                    </div>
+
+                    <div id="imageTypePanel" style="display: none;" class="form-group">
+                        <label class="form-label">Выберите фото</label>
+                        <input type="file" name="UploadedImage" id="uploadedImage" class="form-control" accept="image/*" />
+                        <small class="text-muted">Поддерживаются форматы: JPG, PNG, GIF. Максимальный размер: 5 MB</small>
+                        <div id="imagePreviewContainer" class="mt-2" style="display: none;">
+                            <label class="form-label">Предпросмотр</label>
+                            <div id="imagePreview" class="preview-box"></div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.Dish.ImagePath) && !Model.Dish.ImagePath.StartsWith("emoji:"))
+                        {
+                            <div class="mt-2">
+                                <label class="form-label">Текущее фото</label>
+                                <div class="preview-box">
+                                    <img src="@Model.Dish.ImagePath" alt="Текущее фото" style="width:100%;height:100%;object-fit:cover;" />
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div id="emojiTypePanel" class="form-group">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label">Цвет фона</label>
+                                <select id="iconColor" class="form-select">
+                                    <option value="">Без фона</option>
+                                    <option value="#f8f9fa">Светло-серый</option>
+                                    <option value="#fff3cd">Жёлтый</option>
+                                    <option value="#d1e7dd">Зелёный</option>
+                                    <option value="#f8d7da">Красный</option>
+                                    <option value="#cfe2ff">Синий</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Эмодзи / Символ</label>
+                                <select id="iconEmoji" class="form-select">
+                                    <option value="🍕">🍕 Пицца</option>
+                                    <option value="🍔">🍔 Бургер</option>
+                                    <option value="🍣">🍣 Роллы</option>
+                                    <option value="🍜">🍜 Лапша</option>
+                                    <option value="🔥">🔥 Шашлык</option>
+                                    <option value="🍳">🍳 Горячее</option>
+                                    <option value="🥣">🥣 Суп</option>
+                                    <option value="🥗">🥗 Салат</option>
+                                    <option value="🍟">🍟 Закуски</option>
+                                    <option value="🍰">🍰 Десерт</option>
+                                    <option value="🥤">🥤 Напиток</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <label class="form-label">Предпросмотр</label>
+                            <div id="emojiPreview" class="preview-box">
+                                <span id="previewEmoji" style="font-size: 2rem;">🍕</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-check">
+                        <input asp-for="Dish.IsAvailable" class="form-check-input" />
+                        <label asp-for="Dish.IsAvailable" class="form-check-label">
+                            <i class="bi bi-check-circle me-1"></i> Блюдо доступно для заказа
+                        </label>
+                    </div>
+
+                    <div class="section-title"><i class="bi bi-list-ul"></i> Варианты (размеры, вес, цена) <span class="text-danger">*</span></div>
+                    <div id="variantsContainer">
+                        @for (int i = 0; i < Model.DishVariants.Count; i++)
+                        {
+                            <div class="variant-row" data-index="@i">
+                                <input type="hidden" asp-for="DishVariants[i].DishVariantId" />
+                                <input type="hidden" asp-for="DishVariants[i].DishId" />
+                                <div class="row g-2 align-items-start">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label small">Размер <span class="text-danger">*</span></label>
+                                            <input asp-for="DishVariants[i].SizeName" class="form-control form-control-sm variant-size" placeholder="Маленький / Средний / Большой" />
+                                            <span asp-validation-for="DishVariants[i].SizeName" class="field-error-message"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label class="form-label small">Цена (₽) <span class="text-danger">*</span></label>
+                                            <input asp-for="DishVariants[i].Price" class="form-control form-control-sm variant-price" type="number" step="1" placeholder="499" />
+                                            <span asp-validation-for="DishVariants[i].Price" class="field-error-message"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label class="form-label small">Вес (г) <span class="text-danger">*</span></label>
+                                            <input asp-for="DishVariants[i].Weight" class="form-control form-control-sm variant-weight" type="number" step="1" placeholder="350" />
+                                            <span asp-validation-for="DishVariants[i].Weight" class="field-error-message"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-check mt-4 pt-1">
+                                            <input asp-for="DishVariants[i].IsAvailable" class="form-check-input" />
+                                            <label class="form-check-label small">Доступен</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 text-end">
+                                        <button type="button" class="btn-remove-variant mt-4" onclick="removeVariant(this)" title="Удалить">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <span asp-validation-for="DishVariants" class="field-error-message" id="variantError"></span>
+
+                    <button type="button" class="btn-add-variant mb-4" onclick="addVariant()">
+                        <i class="bi bi-plus-circle me-2"></i> Добавить вариант
+                    </button>
+
+                    <hr />
+
+                    <div class="d-flex gap-3 justify-content-end">
+                        <button type="button" class="btn-cancel" onclick="closeModal()">
+                            <i class="bi bi-x-lg me-1"></i> Отмена
+                        </button>
+                        <button type="submit" class="btn-save">
+                            <i class="bi bi-check-lg me-1"></i> Сохранить изменения
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        var variantIndex = @Model.DishVariants.Count;
+        var currentIconType = 'emoji';
+        var emojiSelected = '🍕';
+        var colorSelected = '';
+
+        function addVariant() {
+            var container = document.getElementById('variantsContainer');
+            var newRow = document.createElement('div');
+            newRow.className = 'variant-row';
+            newRow.setAttribute('data-index', variantIndex);
+            newRow.innerHTML = '<div class="row g-2 align-items-start">' +
+                '<div class="col-md-4">' +
+                '<div class="form-group">' +
+                '<label class="form-label small">Размер <span class="text-danger">*</span></label>' +
+                '<input name="DishVariants[' + variantIndex + '].SizeName" class="form-control form-control-sm variant-size" placeholder="Маленький / Средний / Большой" />' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-md-3">' +
+                '<div class="form-group">' +
+                '<label class="form-label small">Цена (₽) <span class="text-danger">*</span></label>' +
+                '<input name="DishVariants[' + variantIndex + '].Price" class="form-control form-control-sm variant-price" type="number" step="1" placeholder="499" />' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-md-2">' +
+                '<div class="form-group">' +
+                '<label class="form-label small">Вес (г) <span class="text-danger">*</span></label>' +
+                '<input name="DishVariants[' + variantIndex + '].Weight" class="form-control form-control-sm variant-weight" type="number" step="1" placeholder="350" />' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-md-2">' +
+                '<div class="form-check mt-4 pt-1">' +
+                '<input name="DishVariants[' + variantIndex + '].IsAvailable" class="form-check-input" type="checkbox" value="true" checked />' +
+                '<input type="hidden" name="DishVariants[' + variantIndex + '].IsAvailable" value="false" />' +
+                '<label class="form-check-label small">Доступен</label>' +
+                '</div>' +
+                '</div>' +
+                '<div class="col-md-1 text-end">' +
+                '<button type="button" class="btn-remove-variant mt-4" onclick="removeVariant(this)" title="Удалить">' +
+                '<i class="bi bi-trash"></i>' +
+                '</button>' +
+                '</div>' +
+                '</div>' +
+                '<input type="hidden" name="DishVariants[' + variantIndex + '].DishVariantId" value="0" />' +
+                '<input type="hidden" name="DishVariants[' + variantIndex + '].DishId" value="0" />';
+            container.appendChild(newRow);
+            variantIndex++;
+        }
+
+        function removeVariant(btn) {
+            btn.closest('.variant-row').remove();
+        }
+
+        function toggleIconType(type) {
+            currentIconType = type;
+            document.getElementById('iconType').value = type;
+
+            if (type === 'image') {
+                document.getElementById('imageTypePanel').style.display = 'block';
+                document.getElementById('emojiTypePanel').style.display = 'none';
+            } else {
+                document.getElementById('imageTypePanel').style.display = 'none';
+                document.getElementById('emojiTypePanel').style.display = 'block';
+                updateEmojiPreview();
+            }
+        }
+
+        function previewImage() {
+            var input = document.getElementById('uploadedImage');
+            var previewContainer = document.getElementById('imagePreviewContainer');
+            var previewBox = document.getElementById('imagePreview');
+
+            if (input && input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    if (previewBox) previewBox.innerHTML = '<img src="' + e.target.result + '" style="width: 100%; height: 100%; object-fit: cover;">';
+                    if (previewContainer) previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                if (previewContainer) previewContainer.style.display = 'none';
+                if (previewBox) previewBox.innerHTML = '';
+            }
+        }
+
+        function updateEmojiPreview() {
+            var emoji = document.getElementById('iconEmoji').value;
+            var color = document.getElementById('iconColor').value;
+            var previewBox = document.getElementById('emojiPreview');
+            var previewEmoji = document.getElementById('previewEmoji');
+
+            emojiSelected = emoji;
+            colorSelected = color;
+            if (previewEmoji) previewEmoji.textContent = emoji;
+            if (previewBox) {
+                if (color) {
+                    previewBox.style.backgroundColor = color;
+                } else {
+                    previewBox.style.backgroundColor = '#f8f9fa';
+                }
+            }
+        }
+
+        async function loadSubcategories(categoryId) {
+            var subcategorySelect = document.getElementById('SubcategoryId');
+            if (!subcategorySelect) return;
+
+            var currentSubcategoryId = '@Model.Dish.SubcategoryId';
+
+            subcategorySelect.innerHTML = '<option value="">-- Без подкатегории --</option>';
+            subcategorySelect.disabled = true;
+
+            if (!categoryId) {
+                subcategorySelect.disabled = false;
+                return;
+            }
+
+            try {
+                var response = await fetch('/Dish/Create?handler=SubcategoriesByCategory&categoryId=' + categoryId);
+                var subcategories = await response.json();
+
+                for (var i = 0; i < subcategories.length; i++) {
+                    var sub = subcategories[i];
+                    var option = document.createElement('option');
+                    option.value = sub.subcategoryId;
+                    option.textContent = sub.subcategoryName;
+                    if (currentSubcategoryId && currentSubcategoryId == sub.subcategoryId) {
+                        option.selected = true;
+                    }
+                    subcategorySelect.appendChild(option);
+                }
+
+                subcategorySelect.disabled = false;
+            } catch (error) {
+                console.error('Ошибка загрузки подкатегорий:', error);
+                subcategorySelect.disabled = false;
+            }
+        }
+
+        document.getElementById('dishForm').addEventListener('submit', function() {
+            if (currentIconType === 'emoji') {
+                document.getElementById('emojiValue').value = emojiSelected;
+                document.getElementById('colorValue').value = colorSelected;
+            }
+        });
+
+        document.getElementById('iconEmoji')?.addEventListener('change', updateEmojiPreview);
+        document.getElementById('iconColor')?.addEventListener('change', updateEmojiPreview);
+        document.getElementById('uploadedImage')?.addEventListener('change', previewImage);
+        document.getElementById('iconTypeImage')?.addEventListener('change', function() { toggleIconType('image'); });
+        document.getElementById('iconTypeEmoji')?.addEventListener('change', function() { toggleIconType('emoji'); });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEmojiPreview();
+
+            var categorySelect = document.getElementById('CategoryId');
+            if (categorySelect) {
+                if (categorySelect.value) {
+                    loadSubcategories(categorySelect.value);
+                }
+
+                categorySelect.addEventListener('change', function() {
+                    loadSubcategories(this.value);
+                });
+            }
+
+            var existingImagePath = '@Model.Dish.ImagePath';
+            if (existingImagePath) {
+                if (existingImagePath.startsWith('/uploads/')) {
+                    var imageRadio = document.getElementById('iconTypeImage');
+                    if (imageRadio) {
+                        imageRadio.checked = true;
+                        toggleIconType('image');
+                    }
+                } else if (existingImagePath.startsWith('emoji:')) {
+                    var emojiRadio = document.getElementById('iconTypeEmoji');
+                    if (emojiRadio) {
+                        emojiRadio.checked = true;
+                        toggleIconType('emoji');
+                    }
+
+                    var emojiPart = existingImagePath.replace('emoji:', '').split('|');
+                    if (emojiPart[0]) {
+                        var emojiSelect = document.getElementById('iconEmoji');
+                        if (emojiSelect) {
+                            for (var i = 0; i < emojiSelect.options.length; i++) {
+                                if (emojiSelect.options[i].value === emojiPart[0]) {
+                                    emojiSelect.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (emojiPart[1]) {
+                        var colorSelect = document.getElementById('iconColor');
+                        if (colorSelect) {
+                            for (var i = 0; i < colorSelect.options.length; i++) {
+                                if (colorSelect.options[i].value === emojiPart[1]) {
+                                    colorSelect.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    updateEmojiPreview();
+                }
+            }
+        });
+
+        function closeModal() {
+            if (window.parent && window.parent.location.reload) {
+                window.parent.location.reload();
+            } else {
+                window.location.href = '/Dish/Index';
+            }
+        }
+    </script>
+</body>
+</html>

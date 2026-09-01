@@ -1,0 +1,49 @@
+﻿@page
+@model MaxFood.Pages.FAQ.DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>FAQ</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAQ.Question)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAQ.Question)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAQ.Answer)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAQ.Answer)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAQ.DisplayOrder)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAQ.DisplayOrder)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAQ.IsActive)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAQ.IsActive)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FAQ.Category)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FAQ.Category)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.FAQ.FAQId">Edit</a> |
+    <a asp-page="./Index">Back to List</a>
+</div>

@@ -1,0 +1,52 @@
+﻿@page
+@model MaxFood.Pages.User.CreateModel
+
+        @{
+        ViewData["Title"] = "Create";
+        }
+        
+        <h1>Create</h1>
+        
+    <h4>AppUser</h4>
+    <hr />
+    <div class="row">
+    <div class="col-md-4">
+    <form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="AppUser.ProfileId" class="control-label"></label>
+                <select asp-for="AppUser.ProfileId" class ="form-control" asp-items="ViewBag.ProfileId" ></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="AppUser.RoleId" class="control-label"></label>
+                <select asp-for="AppUser.RoleId" class ="form-control" asp-items="ViewBag.RoleId" ></select>
+            </div>
+            <div class="form-group">
+                <span class="text-danger">*</span>
+                <label asp-for="AppUser.PasswordHash" class="control-label"></label>
+                <input asp-for="AppUser.PasswordHash" class="form-control" aria-required="true"/>
+                <span asp-validation-for="AppUser.PasswordHash" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AppUser.LastLoginDate" class="control-label"></label>
+                <input asp-for="AppUser.LastLoginDate" class="form-control" />
+                <span asp-validation-for="AppUser.LastLoginDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AppUser.SelectedPickupPointId" class="control-label"></label>
+                <select asp-for="AppUser.SelectedPickupPointId" class ="form-control" asp-items="ViewBag.SelectedPickupPointId" ></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

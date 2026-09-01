@@ -1,0 +1,100 @@
+﻿@page
+@model MaxFood.Pages.Contacts.IndexModel
+@{
+    ViewData["Title"] = "Контакты";
+}
+
+<div class="container mt-4" style="max-width: 900px;">
+    <!-- Кнопка возврата и значок в одной строке -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill px-3 py-1">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <i class="bi bi-telephone-fill fs-1" style="color: #2c5f2d;"></i>
+        <div style="width: 80px;"></div>
+    </div>
+
+    <div class="text-center mb-4">
+        <h2 class="fw-bold" style="color: #2c5f2d;">Как с нами связаться</h2>
+    </div>
+
+    <!-- ТЕЛЕФОН И ПОЧТА -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded-4 shadow-sm h-100" style="border-left: 5px solid #2c5f2d;">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-telephone-fill fs-2" style="color: #2c5f2d;"></i>
+                    <div>
+                        <div class="fw-bold text-secondary small">Звоните</div>
+                        <div class="fs-5 fw-bold">+7 (999) 888-85-12</div>
+                        <div class="text-muted small">Ежедневно 10:00–23:00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded-4 shadow-sm h-100" style="border-left: 5px solid #e0a800;">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-envelope-fill fs-2" style="color: #e0a800;"></i>
+                    <div>
+                        <div class="fw-bold text-secondary small">Пишите</div>
+                        <div class="fs-5 fw-bold">MaxFood@mail.ru</div>
+                        <div class="text-muted small">Отвечаем в тот же день</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WHATSAPP И TELEGRAM -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded-4 shadow-sm h-100" style="border-left: 5px solid #25d366;">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-whatsapp fs-2" style="color: #25d366;"></i>
+                    <div>
+                        <div class="fw-bold text-secondary small">WhatsApp</div>
+                        <div class="fs-5 fw-bold">+7 (999) 888-85-12</div>
+                        <div class="text-muted small">Здесь отвечаем быстрее всего</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-white rounded-4 shadow-sm h-100" style="border-left: 5px solid #0088cc;">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-telegram fs-2" style="color: #0088cc;"></i>
+                    <div>
+                        <div class="fw-bold text-secondary small">Telegram</div>
+                        <div class="fs-5 fw-bold">@@maxfood_astro</div>
+                        <div class="text-muted small">Пришлём фото блюд по запросу</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ПОДДЕРЖКА -->
+    <div class="row g-4 mb-5">
+        <div class="col-12">
+            <div class="p-3 bg-white rounded-4 shadow-sm" style="border-left: 5px solid #6f42c1;">
+                <div class="d-flex align-items-center gap-3 flex-wrap flex-md-nowrap">
+                    <i class="bi bi-headset fs-2" style="color: #6f42c1;"></i>
+                    <div>
+                        <div class="text-secondary">Поможем 24/7</div>
+                        <div class="fw-bold text-secondary">Поддержка</div>
+                        <div class="text-muted small">Напишите во вкладке «Сообщения» — отвечаем круглосуточно</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- НИЖНЯЯ ПОДПИСЬ -->
+    <div class="text-center mt-3 pt-2 border-top">
+        <p class="text-muted small mt-3">
+            <i class="bi bi-chat-heart-fill text-danger me-1"></i>
+            Не дозвонились? Напишите в поддержку — ответим.
+        </p>
+    </div>
+</div>

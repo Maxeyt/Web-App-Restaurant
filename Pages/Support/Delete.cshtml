@@ -1,0 +1,29 @@
+﻿@page
+@model MaxFood.Pages.Support.DeleteModel
+@{
+    ViewData["Title"] = "Удалить сообщение";
+}
+
+<div class="container mt-4" style="background-color: white; padding: 20px; border-radius: 15px; max-width: 500px;">
+    <h2 class="mb-4"><i class="bi bi-trash me-2 text-danger"></i>Удалить сообщение</h2>
+
+    <div class="alert alert-danger">
+        <h5>Вы уверены, что хотите удалить это сообщение?</h5>
+    </div>
+
+    <div class="card mb-3" style="border: 1px solid #dee2e6; border-radius: 12px;">
+        <div class="card-body">
+            <p class="fw-bold">Сообщение:</p>
+            <p>@Model.Support.Text</p>
+            <small class="text-muted">@Model.Support.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+        </div>
+    </div>
+
+    <form method="post">
+        <input type="hidden" asp-for="Support.SupportId" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>Удалить</button>
+            <a asp-page="./Index" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>

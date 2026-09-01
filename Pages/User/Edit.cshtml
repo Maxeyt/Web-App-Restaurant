@@ -1,0 +1,68 @@
+﻿@page
+@model MaxFood.Pages.User.EditModel
+
+@{
+    ViewData["Title"] = "Редактирование пользователя";
+    var role = HttpContext.Session.GetInt32("UserRole");
+}
+
+@if (role != 4 && role != 3)
+{
+    <div class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="bi bi-shield-lock-fill me-2"></i>Доступ запрещён</h4>
+            <p>Эта страница доступна только администраторам и менеджерам.</p>
+            <a href="/" class="btn btn-outline-danger mt-2">← На главную</a>
+        </div>
+    </div>
+    return;
+}
+
+<h1>Редактирование пользователя</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="AppUser.AppUserId" />
+            <input type="hidden" asp-for="AppUser.RoleId" />
+
+            <div class="form-group mb-3">
+                <label asp-for="AppUser.ProfileId" class="control-label">Профиль</label>
+                <select asp-for="AppUser.ProfileId" class="form-control" asp-items="ViewBag.ProfileId"></select>
+                <span asp-validation-for="AppUser.ProfileId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="AppUser.PasswordHash" class="control-label">Пароль</label>
+                <input asp-for="AppUser.PasswordHash" class="form-control" aria-required="true" />
+                <span asp-validation-for="AppUser.PasswordHash" class="text-danger"></span>
+                <small class="text-muted">Оставьте пустым, чтобы не менять пароль</small>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="AppUser.LastLoginDate" class="control-label">Дата последнего входа</label>
+                <input asp-for="AppUser.LastLoginDate" class="form-control" />
+                <span asp-validation-for="AppUser.LastLoginDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="AppUser.SelectedPickupPointId" class="control-label">Точка самовывоза</label>
+                <select asp-for="AppUser.SelectedPickupPointId" class="form-control" asp-items="ViewBag.SelectedPickupPointId"></select>
+                <span asp-validation-for="AppUser.SelectedPickupPointId" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Сохранить" class="btn btn-primary" />
+                <a asp-page="./Index" class="btn btn-secondary">Назад к списку</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

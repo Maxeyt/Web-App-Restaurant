@@ -1,0 +1,70 @@
+﻿@page
+@model MaxFood.Pages.Order.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Order</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Order.OrderId" />
+            <div class="form-group">
+                <label asp-for="Order.AppUserId" class="control-label"></label>
+                <select asp-for="Order.AppUserId" class="form-control" asp-items="ViewBag.AppUserId" ></select>
+                <span asp-validation-for="Order.AppUserId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Order.CartId" class="control-label"></label>
+                <select asp-for="Order.CartId" class="form-control" asp-items="ViewBag.CartId" ></select>
+                <span asp-validation-for="Order.CartId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Order.PointPickupId" class="control-label"></label>
+                <select asp-for="Order.PointPickupId" class="form-control" asp-items="ViewBag.PointPickupId" ></select>
+                <span asp-validation-for="Order.PointPickupId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Order.OrderDate" class="control-label"></label>
+                <input asp-for="Order.OrderDate" class="form-control" />
+                <span asp-validation-for="Order.OrderDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Order.Status" class="control-label"></label>
+                <input asp-for="Order.Status" class="form-control" />
+                <span asp-validation-for="Order.Status" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Order.TotalAmount" class="control-label"></label>
+                <input asp-for="Order.TotalAmount" class="form-control" />
+                <span asp-validation-for="Order.TotalAmount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Order.PickupTime" class="control-label"></label>
+                <input asp-for="Order.PickupTime" class="form-control" />
+                <span asp-validation-for="Order.PickupTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Order.Comment" class="control-label"></label>
+                <input asp-for="Order.Comment" class="form-control" />
+                <span asp-validation-for="Order.Comment" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

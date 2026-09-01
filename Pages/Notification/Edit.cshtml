@@ -1,0 +1,62 @@
+﻿@page
+@model MaxFood.Pages.Notification.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Notification</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Notification.NotificationId" />
+            <div class="form-group">
+                <label asp-for="Notification.AppUserId" class="control-label"></label>
+                <select asp-for="Notification.AppUserId" class="form-control" asp-items="ViewBag.AppUserId" ></select>
+                <span asp-validation-for="Notification.AppUserId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+<span class="text-danger">*</span>
+                <label asp-for="Notification.Title" class="control-label"></label>
+                <input asp-for="Notification.Title" class="form-control" aria-required="true"/>
+                <span asp-validation-for="Notification.Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+<span class="text-danger">*</span>
+                <label asp-for="Notification.Message" class="control-label"></label>
+                <input asp-for="Notification.Message" class="form-control" aria-required="true"/>
+                <span asp-validation-for="Notification.Message" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="Notification.IsRead" /> @Html.DisplayNameFor(model => model.Notification.IsRead)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="Notification.CreatedDate" class="control-label"></label>
+                <input asp-for="Notification.CreatedDate" class="form-control" />
+                <span asp-validation-for="Notification.CreatedDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Notification.ActionLink" class="control-label"></label>
+                <input asp-for="Notification.ActionLink" class="form-control" />
+                <span asp-validation-for="Notification.ActionLink" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

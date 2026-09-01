@@ -1,0 +1,645 @@
+﻿@page
+@model MaxFood.Pages.Promotion.AdminIndexModel
+@{
+    ViewData["Title"] = "Акции, бонусы и промокоды";
+    var role = HttpContext.Session.GetInt32("UserRole");
+    var activeSubTab = Model.ActiveSubTab ?? "promotions";
+}
+
+@if (role != 4 && role != 3)
+{
+    <div class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="bi bi-shield-lock-fill me-2"></i>Доступ запрещён</h4>
+            <p>Эта страница доступна только администраторам и менеджерам.</p>
+            <a href="/" class="btn btn-outline-danger mt-2">← На главную</a>
+        </div>
+    </div>
+    return;
+}
+
+<!-- Кнопка назад и заголовок -->
+<div style="display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px;">
+    <a href="#" onclick="history.back(); return false;" style="position: absolute; left: 0; font-size: 0.85rem; color: #28a745; text-decoration: none; display: flex; align-items: center; gap: 5px; font-weight: 500;">
+        <i class="bi bi-arrow-left"></i> <span>Назад</span>
+    </a>
+    <h2 style="margin: 0; font-size: 1.2rem; font-weight: 600; letter-spacing: -0.3px;">Акции, бонусы и промокоды</h2>
+</div>
+
+<div class="container mt-3">
+    <div class="bg-white p-4 mb-4" style="border: 1px solid #dee2e6; border-radius: 12px;">
+
+        <!-- Подвкладки -->
+        <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+            <a href="?tab=promotions" class="btn @(activeSubTab == "promotions" ? "btn-success" : "btn-outline-secondary") px-4" style="border-radius: 8px; font-weight: 500;">Акции</a>
+            <a href="?tab=bonuses" class="btn @(activeSubTab == "bonuses" ? "btn-success" : "btn-outline-secondary") px-4" style="border-radius: 8px; font-weight: 500;">Бонусы (кешбэк)</a>
+            <a href="?tab=promocodes" class="btn @(activeSubTab == "promocodes" ? "btn-success" : "btn-outline-secondary") px-4" style="border-radius: 8px; font-weight: 500;">Промокоды</a>
+        </div>
+
+        @if (activeSubTab == "promotions")
+        {
+            <div class="text-center mb-4">
+                <button class="btn px-4" style="background: #28a745; color: white; border-radius: 8px; font-weight: 500;" onclick="openCreateModal()">
+                    <i class="bi bi-plus-circle me-1"></i> Создать акцию
+                </button>
+                <a href="/Promotion/Index" class="btn btn-outline-secondary ms-2 px-4" style="border-radius: 8px;">
+                    <i class="bi bi-eye me-1"></i> Смотреть для всех
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" style="font-size: 0.8rem; background: white; border-radius: 10px; overflow: hidden;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 10px 12px;">ID</th>
+                            <th style="padding: 10px 12px;">Иконка</th>
+                            <th style="padding: 10px 12px;">Название</th>
+                            <th style="padding: 10px 12px;">Скидка</th>
+                            <th style="padding: 10px 12px;">Период</th>
+                            <th style="padding: 10px 12px;">Статус</th>
+                            <th style="padding: 10px 12px;" class="text-end">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PromotionsList)
+                        {
+                            <tr>
+                                <td style="padding: 8px 12px;">@item.PromotionId</td>
+                                <td style="padding: 8px 12px;">
+                                    @if (!string.IsNullOrEmpty(item.IconImagePath))
+                                    {
+                                        <div style="width: 40px; height: 40px; border-radius: 8px; overflow: hidden;">
+                                            <img src="@item.IconImagePath" style="width: 100%; height: 100%; object-fit: cover;">
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div style="width: 40px; height: 40px; background-color: @(string.IsNullOrEmpty(item.IconColor) ? "#28a745" : item.IconColor); display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                                            <span style="font-size: 1.2rem;">@(string.IsNullOrEmpty(item.IconEmoji) ? "🎁" : item.IconEmoji)</span>
+                                        </div>
+                                    }
+                                </td>
+                                <td style="padding: 8px 12px;"><strong>@item.PromotionName</strong><br><small class="text-muted">@item.Description</small></td>
+                                <td style="padding: 8px 12px;">
+                                    @if (item.DiscountType == "promocode")
+                                    {
+                                        <span class="badge" style="background: #0d6efd; padding: 4px 10px; border-radius: 8px;">Промокод</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="background-color: #dc3545; color: white; padding: 4px 12px; border-radius: 8px; font-weight: 600; display: inline-block;">-@(item.DiscountPercent.HasValue? item.DiscountPercent.Value.ToString("0") : "0")%</span>
+                                    }
+                                </td>
+                                <td class="small" style="padding: 8px 12px;">@item.ValidFrom.ToString("dd.MM.yyyy") - @item.ValidTo.ToString("dd.MM.yyyy")</td>
+                                <td style="padding: 8px 12px;"><span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")" style="border-radius: 6px;">@(item.IsActive ? "Активна" : "Неактивна")</span></td>
+                                <td class="text-end" style="padding: 8px 12px;">
+                                    <button class="btn btn-sm btn-outline-warning me-1" style="border-radius: 6px;" onclick="editPromotion(@item.PromotionId)"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" style="border-radius: 6px;" onclick="deletePromotion(@item.PromotionId, '@item.PromotionName.Replace("'", "\\'")')"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else if (activeSubTab == "bonuses")
+        {
+            <div class="card border-0 p-3" style="border: 1px solid #dee2e6; border-radius: 12px;">
+                <h5 class="fw-bold mb-3" style="font-size: 1rem; letter-spacing: -0.2px;"><i class="bi bi-percent text-success me-2"></i>Категории для повышенного кешбэка</h5>
+                <p class="small text-muted mb-3">Включите/выключите категории.</p>
+
+                <div class="table-responsive">
+                    <table class="table table-sm" style="font-size: 0.8rem;">
+                        <thead>
+                            <tr><th>Категория</th><th class="text-center">Кешбэк %</th><th class="text-center">Статус</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cat in Model.AllCashbackCategories)
+                            {
+                                <tr>
+                                    <td style="padding: 8px 12px;"><span class="fs-5 me-2">@cat.Icon</span> @cat.CategoryName</td>
+                                    <td class="text-center align-middle" style="padding: 8px 12px;"><span class="fw-bold text-success">@cat.CashbackPercent%</span></td>
+                                    <td class="text-center align-middle" style="padding: 8px 12px;">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input toggle-cashback" type="checkbox" data-category-id="@cat.Id" @(cat.IsActive ? "checked" : "") onchange="toggleCashbackCategory(@cat.Id, this)" style="cursor: pointer;">
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+        else if (activeSubTab == "promocodes")
+        {
+            <div class="text-center mb-4">
+                <button class="btn px-4" style="background: #28a745; color: white; border-radius: 8px; font-weight: 500;" onclick="openPromocodeModal(0)">
+                    <i class="bi bi-plus-circle me-1"></i> Добавить промокод
+                </button>
+            </div>
+
+            <div class="card border-0 p-3" style="border: 1px solid #dee2e6; border-radius: 12px;">
+                <h5 class="fw-bold mb-3" style="font-size: 1rem; letter-spacing: -0.2px;"><i class="bi bi-ticket-perforated text-success me-2"></i> Активные промокоды</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm" style="font-size: 0.8rem;">
+                        <thead>
+                            <tr><th>Код</th><th>Скидка</th><th>Период</th><th>Использовано</th><th class="text-end">Действия</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.PromocodesList)
+                            {
+                                <tr>
+                                    <td style="padding: 8px 12px;"><strong>@item.PromoCode</strong></td>
+                                    <td style="padding: 8px 12px;"><span class="text-success fw-bold">@item.DiscountPercent%</span></td>
+                                    <td class="small" style="padding: 8px 12px;">@item.ValidFrom.ToString("dd.MM") - @item.ValidTo.ToString("dd.MM.yyyy")</td>
+                                    <td style="padding: 8px 12px;">@item.CurrentUses / @(item.MaxUses.HasValue? item.MaxUses.Value.ToString() : "∞")</td>
+                                    <td class="text-end" style="padding: 8px 12px;">
+                                        <button class="btn btn-sm btn-outline-warning me-1" style="border-radius: 6px;" onclick="openPromocodeModal(@item.PromocodeId)"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-outline-danger" style="border-radius: 6px;" onclick="deletePromocode(@item.PromocodeId, '@item.PromoCode')"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Модальное окно акции -->
+<div class="modal fade" id="promotionModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px;">
+            <div class="modal-header" style="background: #28a745; color: white; border-radius: 12px 12px 0 0;">
+                <h5 class="modal-title text-center w-100" id="modalTitle" style="font-weight: 600;">Создание акции</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="editId" value="0">
+                <input type="hidden" id="iconImagePath" value="">
+
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 500;">Название акции *</label>
+                    <input type="text" id="promotionName" class="form-control" style="border-radius: 8px;" placeholder="Скидка на пиццу">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-block" style="font-weight: 500;">Оформление иконки</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="iconType" id="iconTypeImage" value="image" onchange="toggleIconType('image')">
+                            <label class="form-check-label">Загрузить фото</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="iconType" id="iconTypeEmoji" value="emoji" onchange="toggleIconType('emoji')" checked>
+                            <label class="form-check-label">Выбрать эмодзи</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="imageTypePanel" style="display: none;" class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <input type="text" id="imageFilePath" class="form-control" style="border-radius: 8px;" placeholder="Выберите файл..." readonly>
+                        </div>
+                        <div class="col-4">
+                            <button type="button" class="btn btn-outline-secondary w-100" style="border-radius: 8px;" onclick="document.getElementById('fileInput').click()">Обзор</button>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" style="display: none;" accept="image/*" onchange="handleFileSelect(this)">
+                    <small class="text-muted" style="font-size: 0.7rem;">Поддерживаются форматы: JPG, PNG, GIF. Максимальный размер: 5 MB</small>
+                    <div id="imagePreviewContainer" class="mt-2" style="display: none;">
+                        <label class="form-label">Предпросмотр</label>
+                        <div id="imagePreview" style="width: 100px; height: 100px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            <img id="previewImage" style="max-width: 100%; max-height: 100%; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="emojiTypePanel" class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label" style="font-weight: 500;">Цвет фона</label>
+                            <select id="iconColor" class="form-select" style="border-radius: 8px;">
+                                <option value="#28a745">Зелёный</option>
+                                <option value="#dc3545">Красный</option>
+                                <option value="#0d6efd">Синий</option>
+                                <option value="#fd7e14">Оранжевый</option>
+                                <option value="#6f42c1">Фиолетовый</option>
+                                <option value="#ffc107">Жёлтый</option>
+                                <option value="#20c997">Бирюзовый</option>
+                                <option value="#d63384">Розовый</option>
+                                <option value="#198754">Тёмно-зелёный</option>
+                                <option value="#0dcaf0">Голубой</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" style="font-weight: 500;">Эмодзи / Символ</label>
+                            <select id="iconEmoji" class="form-select" style="border-radius: 8px;">
+                                <option value="🎁">🎁 Подарок</option>
+                                <option value="🍕">🍕 Пицца</option>
+                                <option value="🍔">🍔 Бургер</option>
+                                <option value="🍣">🍣 Роллы</option>
+                                <option value="🔥">🔥 Шашлык</option>
+                                <option value="🍳">🍳 Горячее</option>
+                                <option value="🥣">🥣 Суп</option>
+                                <option value="🥗">🥗 Салат</option>
+                                <option value="🍟">🍟 Закуски</option>
+                                <option value="🍰">🍰 Десерт</option>
+                                <option value="🥤">🥤 Напиток</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label">Предпросмотр</label>
+                        <div id="emojiPreview" style="width: 80px; height: 80px; background-color: #28a745; display: flex; align-items: center; justify-content: center; border-radius: 12px;">
+                            <span id="previewEmoji" style="font-size: 2rem;">🎁</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 500;">Описание</label>
+                    <textarea id="promotionDescription" class="form-control" rows="2" style="border-radius: 8px;" placeholder="Описание акции..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label d-block" style="font-weight: 500;">Тип предложения</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="discountType" id="discountTypePercent" value="percent" onchange="toggleDiscountType('percent')" checked>
+                            <label class="form-check-label">Скидка (%)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="discountType" id="discountTypePromocode" value="promocode" onchange="toggleDiscountType('promocode')">
+                            <label class="form-check-label">Промокод</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="discountPercentPanel" class="mb-3">
+                    <label class="form-label" style="font-weight: 500;">Скидка (%)</label>
+                    <input type="number" id="promotionDiscount" class="form-control" style="border-radius: 8px;" step="0.01" min="0" max="100" placeholder="15">
+                </div>
+
+                <div id="discountPromocodePanel" style="display: none;" class="mb-3">
+                    <label class="form-label" style="font-weight: 500;">Промокод</label>
+                    <input type="text" id="promotionPromocode" class="form-control" style="border-radius: 8px;" placeholder="например: PIZZA2025">
+                    <small class="text-muted" style="font-size: 0.7rem;">Пользователь сможет скопировать промокод и активировать в профиле</small>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="form-check mt-2">
+                            <input type="checkbox" id="promotionIsActive" class="form-check-input" checked>
+                            <label class="form-check-label">Активна</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight: 500;">Дата начала</label>
+                        <input type="date" id="promotionValidFrom" class="form-control" style="border-radius: 8px;">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight: 500;">Дата окончания</label>
+                        <input type="date" id="promotionValidTo" class="form-control" style="border-radius: 8px;">
+                    </div>
+                </div>
+
+                <div class="mt-3 p-3" style="border: 1px solid #dee2e6; background: #f8f9fa; border-radius: 8px;">
+                    <p class="fw-bold mb-2" style="font-size: 0.8rem;">Предпросмотр акции:</p>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div id="previewIcon" style="width: 50px; height: 50px; background-color: #28a745; display: flex; align-items: center; justify-content: center; border-radius: 10px;">
+                            <span id="previewIconEmoji" style="font-size: 1.5rem;">🎁</span>
+                        </div>
+                        <div>
+                            <div id="previewTitle" style="font-weight: 600; font-size: 0.9rem;">Название акции</div>
+                            <div id="previewDiscount" class="badge" style="background: #dc3545; font-size: 0.7rem;">-0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center" style="border-top: 1px solid #dee2e6;">
+                <button type="button" class="btn px-4" style="background: #28a745; color: white; border-radius: 8px;" onclick="savePromotion()">Сохранить</button>
+                <button type="button" class="btn btn-secondary px-4" style="border-radius: 8px;" data-bs-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно промокода -->
+<div class="modal fade" id="promocodeModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 12px;">
+            <div class="modal-header" style="background: #28a745; color: white; border-radius: 12px 12px 0 0;">
+                <h5 class="modal-title text-center w-100" id="promocodeModalTitle" style="font-weight: 600;">Добавление промокода</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="editPromocodeId" value="0">
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 500;">Код</label>
+                    <input type="text" id="promocodeCode" class="form-control" style="border-radius: 8px;" placeholder="SUMMER2025">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 500;">Скидка (%)</label>
+                    <input type="number" id="promocodeDiscount" class="form-control" style="border-radius: 8px;" placeholder="15">
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label" style="font-weight: 500;">Дата начала</label>
+                        <input type="date" id="promocodeValidFrom" class="form-control" style="border-radius: 8px;">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="font-weight: 500;">Дата окончания</label>
+                        <input type="date" id="promocodeValidTo" class="form-control" style="border-radius: 8px;">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 500;">Макс. использований</label>
+                    <input type="number" id="promocodeMaxUses" class="form-control" style="border-radius: 8px;" placeholder="100">
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center" style="border-top: 1px solid #dee2e6;">
+                <button type="button" class="btn px-4" style="background: #28a745; color: white; border-radius: 8px;" onclick="savePromocode()">Сохранить</button>
+                <button type="button" class="btn btn-secondary px-4" style="border-radius: 8px;" data-bs-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="antiForgeryForm" style="display:none;">@Html.AntiForgeryToken()</form>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentIconType = 'emoji';
+    let currentDiscountType = 'percent';
+    let selectedFile = null;
+
+    function getToken() { return document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''; }
+
+    function toggleIconType(type) {
+        currentIconType = type;
+        if (type === 'image') {
+            document.getElementById('imageTypePanel').style.display = 'block';
+            document.getElementById('emojiTypePanel').style.display = 'none';
+        } else {
+            document.getElementById('imageTypePanel').style.display = 'none';
+            document.getElementById('emojiTypePanel').style.display = 'block';
+        }
+        updatePreview();
+    }
+
+    function toggleDiscountType(type) {
+        currentDiscountType = type;
+        if (type === 'percent') {
+            document.getElementById('discountPercentPanel').style.display = 'block';
+            document.getElementById('discountPromocodePanel').style.display = 'none';
+        } else {
+            document.getElementById('discountPercentPanel').style.display = 'none';
+            document.getElementById('discountPromocodePanel').style.display = 'block';
+        }
+        updatePreview();
+    }
+
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            selectedFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imageFilePath').value = selectedFile.name;
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+                const previewImg = document.getElementById('previewImage');
+                previewImg.src = e.target.result;
+                document.getElementById('iconImagePath').value = '';
+                updatePreview();
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+    }
+
+    function updatePreview() {
+        const previewIcon = document.getElementById('previewIcon');
+        const previewIconEmoji = document.getElementById('previewIconEmoji');
+
+        if (currentIconType === 'image' && selectedFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewIcon.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            };
+            reader.readAsDataURL(selectedFile);
+        } else if (currentIconType === 'image' && document.getElementById('iconImagePath').value) {
+            previewIcon.innerHTML = `<img src="${document.getElementById('iconImagePath').value}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        } else {
+            const emoji = document.getElementById('iconEmoji').value;
+            const color = document.getElementById('iconColor').value;
+            previewIcon.style.backgroundColor = color;
+            previewIcon.innerHTML = `<span style="font-size: 1.5rem;">${emoji}</span>`;
+        }
+
+        const name = document.getElementById('promotionName').value || 'Название акции';
+        document.getElementById('previewTitle').innerText = name;
+
+        if (currentDiscountType === 'percent') {
+            const discount = document.getElementById('promotionDiscount').value || '0';
+            document.getElementById('previewDiscount').innerText = `-${discount}%`;
+            document.getElementById('previewDiscount').style.background = '#dc3545';
+        } else {
+            const promocode = document.getElementById('promotionPromocode').value || 'ПРОМОКОД';
+            document.getElementById('previewDiscount').innerText = promocode;
+            document.getElementById('previewDiscount').style.background = '#0d6efd';
+        }
+    }
+
+    async function openPromocodeModal(id) {
+        document.getElementById('editPromocodeId').value = id;
+
+        if (id === 0) {
+            document.getElementById('promocodeModalTitle').innerText = 'Добавление промокода';
+            document.getElementById('promocodeCode').value = '';
+            document.getElementById('promocodeDiscount').value = '';
+            document.getElementById('promocodeValidFrom').value = new Date().toISOString().split('T')[0];
+            document.getElementById('promocodeValidTo').value = new Date(Date.now() + 30*86400000).toISOString().split('T')[0];
+            document.getElementById('promocodeMaxUses').value = '100';
+        } else {
+            document.getElementById('promocodeModalTitle').innerText = 'Редактирование промокода';
+            const resp = await fetch(`?handler=GetPromocode&id=${id}`);
+            const data = await resp.json();
+            document.getElementById('promocodeCode').value = data.promoCode;
+            document.getElementById('promocodeDiscount').value = data.discountPercent;
+            document.getElementById('promocodeValidFrom').value = data.validFrom.split('T')[0];
+            document.getElementById('promocodeValidTo').value = data.validTo.split('T')[0];
+            document.getElementById('promocodeMaxUses').value = data.maxUses || '';
+        }
+        new bootstrap.Modal(document.getElementById('promocodeModal')).show();
+    }
+
+    async function savePromocode() {
+        const id = parseInt(document.getElementById('editPromocodeId').value);
+        const code = document.getElementById('promocodeCode').value.trim();
+        const discount = parseFloat(document.getElementById('promocodeDiscount').value);
+        const validFrom = document.getElementById('promocodeValidFrom').value;
+        const validTo = document.getElementById('promocodeValidTo').value;
+        const maxUses = parseInt(document.getElementById('promocodeMaxUses').value) || null;
+
+        if (!code) { alert('Введите код'); return; }
+        if (!discount || discount <= 0) { alert('Введите процент скидки'); return; }
+
+        const url = id === 0 ? '?handler=SavePromocode' : '?handler=UpdatePromocode';
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+            body: JSON.stringify({ promocodeId: id, code: code, discountPercent: discount, validFrom: validFrom, validTo: validTo, maxUses: maxUses })
+        });
+        const result = await resp.json();
+        if (result.success) location.reload();
+        else alert(result.message);
+    }
+
+    function deletePromocode(id, code) {
+        if (!confirm(`Удалить "${code}"?`)) return;
+        fetch(`?handler=DeletePromocode&id=${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': getToken() } })
+            .then(r => r.json()).then(r => { if (r.success) location.reload(); else alert(r.message); });
+    }
+
+    async function toggleCashbackCategory(categoryId, checkbox) {
+        const isActive = checkbox.checked;
+        const resp = await fetch('?handler=ToggleCashbackCategory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+            body: JSON.stringify({ categoryId: categoryId, isActive: isActive })
+        });
+        const result = await resp.json();
+        if (!result.success) { checkbox.checked = !isActive; alert(result.message); }
+    }
+
+    function openCreateModal() {
+        document.getElementById('modalTitle').innerText = 'Создание акции';
+        document.getElementById('editId').value = '0';
+        document.getElementById('promotionName').value = '';
+        document.getElementById('promotionDescription').value = '';
+        document.getElementById('promotionDiscount').value = '';
+        document.getElementById('promotionPromocode').value = '';
+        document.getElementById('promotionIsActive').checked = true;
+        document.getElementById('promotionValidFrom').value = new Date().toISOString().split('T')[0];
+        document.getElementById('promotionValidTo').value = new Date(Date.now() + 30*86400000).toISOString().split('T')[0];
+        document.getElementById('iconColor').value = '#28a745';
+        document.getElementById('iconEmoji').value = '🎁';
+        document.getElementById('iconImagePath').value = '';
+        document.getElementById('imageFilePath').value = '';
+        document.getElementById('imagePreviewContainer').style.display = 'none';
+        selectedFile = null;
+        document.getElementById('iconTypeImage').checked = false;
+        document.getElementById('iconTypeEmoji').checked = true;
+        document.getElementById('discountTypePercent').checked = true;
+        document.getElementById('discountTypePromocode').checked = false;
+        currentDiscountType = 'percent';
+        document.getElementById('discountPercentPanel').style.display = 'block';
+        document.getElementById('discountPromocodePanel').style.display = 'none';
+        toggleIconType('emoji');
+        updatePreview();
+        new bootstrap.Modal(document.getElementById('promotionModal')).show();
+    }
+
+    async function editPromotion(id) {
+        const resp = await fetch(`?handler=GetPromotion&id=${id}`);
+        const d = await resp.json();
+
+        document.getElementById('modalTitle').innerText = 'Редактирование акции';
+        document.getElementById('editId').value = d.promotionId;
+        document.getElementById('promotionName').value = d.promotionName;
+        document.getElementById('promotionDescription').value = d.description || '';
+        document.getElementById('promotionIsActive').checked = d.isActive;
+        document.getElementById('promotionValidFrom').value = d.validFrom.split('T')[0];
+        document.getElementById('promotionValidTo').value = d.validTo.split('T')[0];
+        document.getElementById('iconImagePath').value = d.iconImagePath || '';
+        selectedFile = null;
+
+        if (d.discountType === 'promocode') {
+            document.getElementById('discountTypePromocode').checked = true;
+            document.getElementById('discountTypePercent').checked = false;
+            currentDiscountType = 'promocode';
+            document.getElementById('discountPercentPanel').style.display = 'none';
+            document.getElementById('discountPromocodePanel').style.display = 'block';
+            document.getElementById('promotionPromocode').value = d.promocodeValue || '';
+        } else {
+            document.getElementById('discountTypePercent').checked = true;
+            document.getElementById('discountTypePromocode').checked = false;
+            currentDiscountType = 'percent';
+            document.getElementById('discountPercentPanel').style.display = 'block';
+            document.getElementById('discountPromocodePanel').style.display = 'none';
+            document.getElementById('promotionDiscount').value = d.discountPercent || '';
+        }
+
+        if (d.iconImagePath && d.iconImagePath !== '') {
+            document.getElementById('iconImagePath').value = d.iconImagePath;
+            document.getElementById('imageFilePath').value = d.iconImagePath.split('/').pop();
+            document.getElementById('iconTypeImage').checked = true;
+            document.getElementById('iconTypeEmoji').checked = false;
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+            document.getElementById('previewImage').src = d.iconImagePath;
+            toggleIconType('image');
+        } else {
+            document.getElementById('iconColor').value = d.iconColor || '#28a745';
+            document.getElementById('iconEmoji').value = d.iconEmoji || '🎁';
+            document.getElementById('iconTypeImage').checked = false;
+            document.getElementById('iconTypeEmoji').checked = true;
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            toggleIconType('emoji');
+        }
+        updatePreview();
+        new bootstrap.Modal(document.getElementById('promotionModal')).show();
+    }
+
+    async function savePromotion() {
+        const id = document.getElementById('editId').value;
+        const formData = new FormData();
+
+        formData.append('promotionId', id ? parseInt(id) : 0);
+        formData.append('promotionName', document.getElementById('promotionName').value);
+        formData.append('description', document.getElementById('promotionDescription').value);
+        formData.append('discountPercent', currentDiscountType === 'percent' ? document.getElementById('promotionDiscount').value : '');
+        formData.append('discountType', currentDiscountType);
+        formData.append('promocodeValue', currentDiscountType === 'promocode' ? document.getElementById('promotionPromocode').value : '');
+        formData.append('isActive', document.getElementById('promotionIsActive').checked);
+        formData.append('validFrom', document.getElementById('promotionValidFrom').value);
+        formData.append('validTo', document.getElementById('promotionValidTo').value);
+        formData.append('iconType', currentIconType);
+        formData.append('iconColor', document.getElementById('iconColor').value);
+        formData.append('iconEmoji', document.getElementById('iconEmoji').value);
+
+        if (selectedFile) {
+            formData.append('uploadedImage', selectedFile);
+        } else if (currentIconType === 'image' && document.getElementById('iconImagePath').value) {
+            formData.append('existingImagePath', document.getElementById('iconImagePath').value);
+        }
+
+        const promotionName = document.getElementById('promotionName').value;
+        if (!promotionName) { alert('Введите название акции'); return; }
+
+        const resp = await fetch('?handler=SavePromotion', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': getToken() },
+            body: formData
+        });
+        const result = await resp.json();
+        if (result.success) location.reload();
+        else alert(result.message);
+    }
+
+    function deletePromotion(id, name) {
+        if (!confirm(`Удалить акцию "${name}"?`)) return;
+        fetch(`?handler=DeletePromotion&id=${id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': getToken() } })
+            .then(r => r.json()).then(r => { if (r.success) location.reload(); else alert(r.message); });
+    }
+
+    document.getElementById('promotionName')?.addEventListener('input', updatePreview);
+    document.getElementById('promotionDiscount')?.addEventListener('input', updatePreview);
+    document.getElementById('promotionPromocode')?.addEventListener('input', updatePreview);
+    document.getElementById('iconColor')?.addEventListener('change', updatePreview);
+    document.getElementById('iconEmoji')?.addEventListener('change', updatePreview);
+</script>

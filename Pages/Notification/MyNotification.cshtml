@@ -1,0 +1,283 @@
+﻿@page
+@model MaxFood.Pages.Notification.MyNotificationModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = "Уведомления";
+    var userRole = HttpContext.Session.GetInt32("UserRole");
+    var requestToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+}
+
+<div class="container mt-4" style="max-width: 700px; margin: 0 auto;">
+    <div class="text-center mb-4">
+        <i class="bi bi-bell" style="font-size: 48px; color: #2b8c4a;"></i>
+        <h1 class="fw-bold mt-2" style="font-size: 1.5rem;">Уведомления</h1>
+    </div>
+
+    @if (!Model.IsAuthenticated)
+    {
+        <div class="text-center py-5 bg-white rounded-4 border" style="border-color: #e9ecef !important;">
+            <i class="bi bi-person-lock" style="font-size: 64px; color: #adb5bd;"></i>
+            <h3 class="fw-bold mt-3" style="font-size: 1.2rem;">Требуется авторизация</h3>
+            <p class="text-muted small">Войдите, чтобы видеть уведомления</p>
+            <div class="mt-3">
+                <a href="/Authorization/Login" class="btn" style="background: #2b8c4a; color: white; border-radius: 30px; padding: 8px 24px;">Войти</a>
+                <a href="/Registration/Register" class="btn btn-outline-secondary rounded-pill ms-2">Регистрация</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-center align-items-center gap-2 mb-4 flex-wrap">
+            <a href="?filter=all" class="btn rounded-pill px-3 @(Model.FilterStatus == "all" ? "btn-success" : "btn-outline-secondary")" style="font-size: 0.8rem;">Все (@Model.TotalCount)</a>
+            <a href="?filter=unread" class="btn rounded-pill px-3 @(Model.FilterStatus == "unread" ? "btn-success" : "btn-outline-secondary")" style="font-size: 0.8rem;">Непрочитанные</a>
+            <a href="?filter=read" class="btn rounded-pill px-3 @(Model.FilterStatus == "read" ? "btn-success" : "btn-outline-secondary")" style="font-size: 0.8rem;">Прочитанные</a>
+            <div class="ms-4">
+                <button onclick="markAllAsRead()" class="btn btn-outline-secondary rounded-pill px-3" style="font-size: 0.8rem;">
+                    <i class="bi bi-check2-all me-1"></i> Прочитать всё
+                </button>
+            </div>
+        </div>
+
+        @if (Model.Notifications == null || !Model.Notifications.Any())
+        {
+            <div class="text-center py-5 bg-white rounded-4 border">
+                <i class="bi bi-inbox" style="font-size: 48px; color: #dee2e6;"></i>
+                <p class="mt-2 text-muted">Уведомлений нет</p>
+            </div>
+        }
+        else
+        {
+            <div class="notifications-list">
+                @foreach (var item in Model.Notifications)
+                {
+                    var hasLink = !string.IsNullOrEmpty(item.ActionLink);
+                    var canAccessLink = false;
+                    var showLinkInModal = false;
+                    
+                    if (hasLink && userRole.HasValue)
+                    {
+                        var link = item.ActionLink.ToLower();
+                        var adminPages = new[] { "/dish", "/user", "/category", "/subcategory", "/promotion/adminindex", "/notification", "/order/index" };
+                        var isAdminPage = adminPages.Any(p => link.Contains(p));
+                        
+                        if (isAdminPage)
+                        {
+                            canAccessLink = userRole.Value == 4 || userRole.Value == 2;
+                        }
+                        else
+                        {
+                            canAccessLink = true;
+                        }
+                        
+                        showLinkInModal = canAccessLink;
+                    }
+                    
+                    <div onclick='openNotificationModal(@item.NotificationId, "@item.Title.Replace("\"", "\\\"")", "@item.Message.Replace("\"", "\\\"")", "@(item.LongMessage?.Replace("\"", "\\\"") ?? "")", "@item.ActionLink?.Replace("\"", "\\\"")", @showLinkInModal.ToString().ToLower())' 
+                         class="bg-white rounded-3 p-3 mb-2 border cursor-pointer transition"
+                         style="border-color: @(item.IsRead ? "#dee2e6" : "#2b8c4a") !important; cursor: pointer;">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="rounded-circle p-2" style="background: @(item.IsRead ? "#f1f3f5" : "#e8f5e9");">
+                                <i class="bi bi-envelope" style="color: @(item.IsRead ? "#adb5bd" : "#2b8c4a");"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center">
+                                    <h6 class="fw-bold mb-0" style="font-size: 0.9rem;">@item.Title</h6>
+                                    <small class="text-muted" style="font-size: 0.7rem;">@item.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
+                                </div>
+                                <p class="mb-0 mt-1 small text-secondary">@item.Message</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a href="?page=@i&filter=@Model.FilterStatus" class="btn btn-sm rounded-pill @(i == Model.CurrentPage ? "btn-success" : "btn-outline-secondary")" style="width: 36px;">@i</a>
+                    }
+                </div>
+            }
+        }
+    }
+</div>
+
+<div class="modal fade" id="notificationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 24px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <p id="modalShort" class="small mb-2"></p>
+                <p id="modalLong" class="small text-muted"></p>
+                <div id="modalLinkContainer" class="mt-3" style="display: none;">
+                    <a href="#" id="modalLink" class="btn btn-sm" style="background: #2b8c4a; color: white; border-radius: 30px;" target="_blank">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Перейти по ссылке
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 30px;">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Форма для генерации антифоргери токена *@
+<form id="antiForgeryForm" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function getToken() { 
+        var tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+        return tokenInput ? tokenInput.value : '';
+    }
+    
+    let currentNotificationId = null;
+    let isMarkedAsRead = false;
+    
+    async function markAsRead(notificationId) {
+        if (!notificationId) return false;
+        try {
+            const response = await fetch('/Notification/MyNotification?handler=MarkAsRead', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getToken(),
+                    'RequestVerificationToken': getToken()
+                },
+                body: JSON.stringify({ notificationId: notificationId })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const result = await response.json();
+            return result.success === true;
+        } catch(err) {
+            console.warn('Ошибка при отметке прочитанного:', err);
+            return false;
+        }
+    }
+    
+    async function markAllAsRead() {
+        if (!confirm('Отметить все уведомления как прочитанные?')) return;
+        
+        const btn = event.target.closest('button');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>...';
+        
+        try {
+            const response = await fetch('/Notification/MyNotification?handler=MarkAllAsRead', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getToken(),
+                    'RequestVerificationToken': getToken()
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Ошибка: ' + (result.message || 'Не удалось отметить все'));
+            }
+        } catch(err) {
+            console.error(err);
+            alert('Ошибка соединения: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+    
+    async function openNotificationModal(id, title, shortMsg, longMsg, actionLink, showLink) {
+        currentNotificationId = id;
+        isMarkedAsRead = false;
+        
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalShort').innerHTML = shortMsg;
+        document.getElementById('modalLong').innerHTML = longMsg || 'Нет подробного описания';
+        
+        const linkContainer = document.getElementById('modalLinkContainer');
+        const linkElement = document.getElementById('modalLink');
+        
+        if (showLink && actionLink && actionLink.trim() !== '') {
+            linkElement.href = actionLink;
+            linkContainer.style.display = 'block';
+        } else {
+            linkContainer.style.display = 'none';
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+        modal.show();
+        
+        const modalElement = document.getElementById('notificationModal');
+        const onHidden = async function() {
+            if (!isMarkedAsRead && currentNotificationId) {
+                const marked = await markAsRead(currentNotificationId);
+                if (marked && currentNotificationId) {
+                    const cards = document.querySelectorAll('.bg-white.rounded-3');
+                    for (let card of cards) {
+                        const onclickAttr = card.getAttribute('onclick');
+                        if (onclickAttr && onclickAttr.includes(`openNotificationModal(${currentNotificationId}`)) {
+                            card.style.borderColor = '#dee2e6';
+                            const iconDiv = card.querySelector('.rounded-circle');
+                            const icon = card.querySelector('.rounded-circle i');
+                            if (iconDiv) iconDiv.style.background = '#f1f3f5';
+                            if (icon) icon.style.color = '#adb5bd';
+                            break;
+                        }
+                    }
+                }
+                isMarkedAsRead = true;
+            }
+            modalElement.removeEventListener('hidden.bs.modal', onHidden);
+            currentNotificationId = null;
+        };
+        
+        modalElement.addEventListener('hidden.bs.modal', onHidden);
+        
+        if (showLink && actionLink && actionLink.trim() !== '') {
+            linkElement.onclick = async function(e) {
+                if (!isMarkedAsRead && currentNotificationId) {
+                    await markAsRead(currentNotificationId);
+                    isMarkedAsRead = true;
+                }
+                return true;
+            };
+        }
+    }
+</script>
+
+<style>
+    .transition { transition: all 0.15s; }
+    .bg-white { background: white; }
+    .rounded-3 { border-radius: 16px; }
+    .btn-success { background: #2b8c4a !important; border: none; }
+    .btn-outline-secondary { border-color: #dee2e6; color: #495057; }
+    .btn-outline-secondary:hover { background: #f8f9fa; border-color: #ced4da; }
+    .border { border: 1px solid #e9ecef !important; }
+    #modalLink {
+        transition: all 0.2s;
+    }
+    #modalLink:hover {
+        background: #1e6b38 !important;
+        transform: translateY(-1px);
+    }
+</style>

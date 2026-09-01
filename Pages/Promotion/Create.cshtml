@@ -1,0 +1,63 @@
+﻿@page
+@model MaxFood.Pages.Promotion.CreateModel
+
+@{
+    ViewData["Title"] = "Создать акцию";
+}
+
+<h1>Создать акцию</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Promotion.PromotionName" class="control-label"></label>
+                <input asp-for="Promotion.PromotionName" class="form-control" />
+                <span asp-validation-for="Promotion.PromotionName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Promotion.Description" class="control-label"></label>
+                <input asp-for="Promotion.Description" class="form-control" />
+                <span asp-validation-for="Promotion.Description" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Promotion.DiscountPercent" class="control-label"></label>
+                <input asp-for="Promotion.DiscountPercent" class="form-control" />
+                <span asp-validation-for="Promotion.DiscountPercent" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Promotion.ValidFrom" class="control-label"></label>
+                <input asp-for="Promotion.ValidFrom" class="form-control" />
+                <span asp-validation-for="Promotion.ValidFrom" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Promotion.ValidTo" class="control-label"></label>
+                <input asp-for="Promotion.ValidTo" class="form-control" />
+                <span asp-validation-for="Promotion.ValidTo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3 form-check">
+                <input class="form-check-input" asp-for="Promotion.IsActive" />
+                <label class="form-check-label" asp-for="Promotion.IsActive"></label>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Создать" class="btn btn-primary" />
+                <a asp-page="./Index" class="btn btn-secondary">Назад к списку</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

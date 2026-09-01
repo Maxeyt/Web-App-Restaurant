@@ -1,0 +1,75 @@
+﻿@page "/Cart/Edit/{id:int}"
+@model MaxFood.Pages.Cart.EditModel
+@{
+    ViewData["Title"] = $"Редактирование корзины #{Model.Cart?.CartId}";
+}
+
+<div class="container mt-4">
+    <h1><i class="bi bi-pencil-square"></i> Редактирование корзины #@Model.Cart?.CartId</h1>
+
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        Внимание: Изменяйте данные только в случае технической необходимости.
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <input type="hidden" asp-for="Cart.CartId" />
+                        <input type="hidden" asp-for="Cart.AppUserId" />
+                        <input type="hidden" asp-for="Cart.CreatedDate" />
+
+                        <div class="mb-3">
+                            <label asp-for="Cart.Name" class="form-label">Название (Комментарий)</label>
+                            <input asp-for="Cart.Name" class="form-control" />
+                            <span asp-validation-for="Cart.Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Cart.TotalAmount" class="form-label">Итоговая сумма</label>
+                            <input asp-for="Cart.TotalAmount" class="form-control" step="0.01" />
+                            <span asp-validation-for="Cart.TotalAmount" class="text-danger"></span>
+                            <div class="form-text">Изменение суммы не пересчитывает товары автоматически.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <input type="submit" value="Сохранить" class="btn btn-primary" />
+                            <a asp-page="./Details" asp-route-id="@Model.Cart.CartId" class="btn btn-secondary">Отмена</a>
+                            <a asp-page="./Index" class="btn btn-outline-dark">К списку</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Информация о владельце</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Cart.AppUser?.UserProfile != null)
+                    {
+                        <p><strong>ФИО:</strong> @Model.Cart.AppUser.UserProfile.FirstName @Model.Cart.AppUser.UserProfile.LastName</p>
+                        <p><strong>ID:</strong> @Model.Cart.AppUserId</p>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Пользователь не найден или удален.</p>
+                    }
+                    <p><strong>Дата создания:</strong> @Model.Cart.CreatedDate</p>
+                    <p><strong>Товаров:</strong> @Model.Cart.CartItems.Count</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

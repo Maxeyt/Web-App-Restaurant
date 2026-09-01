@@ -1,0 +1,53 @@
+﻿@page
+@model PrivacyModel
+@{
+    ViewData["Title"] = "Политика конфиденциальности";
+}
+
+<div class="container mt-4" style="max-width: 900px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill px-3 py-1">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+        <i class="bi bi-shield-lock-fill fs-1" style="color: #2c5f2d;"></i>
+        <div style="width: 80px;"></div>
+    </div>
+
+    <div class="text-center mb-4">
+        <h1 class="fw-bold" style="color: #2c5f2d;">@ViewData["Title"]</h1>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <h5 class="fw-bold" style="color: #2c5f2d;">1. Сбор и использование информации</h5>
+                <p>Мы собираем информацию, которую вы предоставляете при регистрации, оформлении заказа или использовании нашего сайта. Это может включать ваше имя, адрес электронной почты, номер телефона и адрес доставки.</p>
+            </div>
+
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <h5 class="fw-bold" style="color: #2c5f2d;">2. Использование данных</h5>
+                <p>Ваши данные используются для обработки заказов, доставки еды, связи с вами по вопросам заказов, а также для улучшения качества обслуживания.</p>
+            </div>
+
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <h5 class="fw-bold" style="color: #2c5f2d;">3. Защита данных</h5>
+                <p>Мы принимаем необходимые меры для защиты вашей личной информации от несанкционированного доступа, изменения, раскрытия или уничтожения.</p>
+            </div>
+
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <h5 class="fw-bold" style="color: #2c5f2d;">4. Передача данных третьим лицам</h5>
+                <p>Мы не передаем ваши личные данные третьим лицам, за исключением случаев, предусмотренных законом, или для выполнения заказа (например, службе доставки).</p>
+            </div>
+
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <h5 class="fw-bold" style="color: #2c5f2d;">5. Cookies</h5>
+                <p>Наш сайт использует cookies для хранения информации о ваших предпочтениях и для улучшения работы сайта. Вы можете отключить cookies в настройках браузера.</p>
+            </div>
+
+            <div class="mb-4 p-3 bg-light rounded-3">
+                <h5 class="fw-bold" style="color: #2c5f2d;">6. Изменения в политике конфиденциальности</h5>
+                <p>Мы оставляем за собой право вносить изменения в данную политику конфиденциальности. Обновленная версия будет опубликована на этой странице.</p>
+            </div>
+        </div>
+    </div>
+</div>

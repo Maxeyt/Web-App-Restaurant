@@ -1,0 +1,58 @@
+﻿@page
+@model MaxFood.Pages.Promotion.DeleteModel
+
+@{
+    ViewData["Title"] = "Удалить акцию";
+}
+
+<h1>Удалить акцию</h1>
+
+<h3>Вы уверены, что хотите удалить это?</h3>
+<div>
+    <h4>Акция</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Promotion.PromotionName)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Promotion.PromotionName)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Promotion.Description)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Promotion.Description)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Promotion.DiscountPercent)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Promotion.DiscountPercent)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Promotion.ValidFrom)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Promotion.ValidFrom)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Promotion.ValidTo)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Promotion.ValidTo)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Promotion.IsActive)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Promotion.IsActive)
+        </dd>
+    </dl>
+
+    <form method="post">
+        <input type="hidden" asp-for="Promotion.PromotionId" />
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a asp-page="./Index" class="btn btn-secondary">Назад к списку</a>
+    </form>
+</div>

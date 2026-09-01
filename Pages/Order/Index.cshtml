@@ -1,0 +1,583 @@
+﻿@page
+@model MaxFood.Pages.Order.IndexModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = "Управление заказами";
+    var role = HttpContext.Session.GetInt32("UserRole");
+    var requestToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+    bool isAdminOrManager = (role == 4 || role == 3);
+    bool isCourier = (role == 2);
+}
+
+@if (role == null || role == 1)
+{
+    <div class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="bi bi-shield-lock-fill me-2"></i>Доступ запрещён</h4>
+            <p>Эта страница доступна только сотрудникам MaxFood.</p>
+            <a href="/" class="btn btn-outline-danger mt-2">← На главную</a>
+        </div>
+    </div>
+    return;
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Управление заказами - MaxFood</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+            letter-spacing: -0.2px;
+        }
+
+        body {
+            background: #f5f7fa;
+        }
+
+        .orders-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h2 {
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #1a2a3a;
+            margin: 0;
+        }
+
+        .page-header h2 i {
+            color: #2b8c4a;
+            margin-right: 10px;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn i {
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active {
+            background: #2b8c4a;
+            color: white;
+        }
+
+        .filter-btn:not(.active) {
+            background: white;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+
+        .filter-btn:not(.active):hover {
+            border-color: #2b8c4a;
+            color: #2b8c4a;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+        .order-header {
+            padding: 14px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .order-number {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .order-status-badge {
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-new {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-ready {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completed {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .order-body {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .order-info p {
+            margin: 0 0 6px 0;
+            font-size: 0.85rem;
+        }
+
+        .order-info i {
+            width: 20px;
+            color: #6c757d;
+            margin-right: 6px;
+        }
+
+        .order-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2b8c4a;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-sm-custom {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-outline-primary-custom {
+            border: 1px solid #2b8c4a;
+            color: #2b8c4a;
+            background: transparent;
+        }
+
+        .btn-outline-primary-custom:hover {
+            background: #2b8c4a;
+            color: white;
+        }
+
+        .btn-outline-success-custom {
+            border: 1px solid #28a745;
+            color: #28a745;
+            background: transparent;
+        }
+
+        .btn-outline-success-custom:hover {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-outline-info-custom {
+            border: 1px solid #17a2b8;
+            color: #17a2b8;
+            background: transparent;
+        }
+
+        .btn-outline-info-custom:hover {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-outline-danger-custom {
+            border: 1px solid #dc3545;
+            color: #dc3545;
+            background: transparent;
+        }
+
+        .btn-outline-danger-custom:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .page-link-custom {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #dee2e6;
+            text-decoration: none;
+            color: #495057;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .page-link-custom:hover {
+            border-color: #2b8c4a;
+            color: #2b8c4a;
+        }
+
+        .page-link-custom.active {
+            background: #2b8c4a;
+            border-color: #2b8c4a;
+            color: white;
+        }
+
+        .stats-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #2b8c4a;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        @@media (max-width: 768px) {
+            .orders-container {
+                padding: 16px;
+            }
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .order-body {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .order-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            .stats-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .stat-item {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <input type="hidden" id="__RequestVerificationToken" value="@requestToken" />
+
+    <div class="orders-container">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <h2><i class="bi bi-box-seam-fill me-2"></i> Управление заказами</h2>
+            <a href="/Profile/MyProfile" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Вернуться в профиль
+            </a>
+        </div>
+
+        <!-- Фильтры -->
+        <div class="filter-bar">
+            <a href="?status=all" class="filter-btn @(Model.CurrentStatusFilter == "all" ? "active" : "")">Все заказы</a>
+            <a href="?status=new" class="filter-btn @(Model.CurrentStatusFilter == "new" ? "active" : "")">Новые</a>
+            <a href="?status=ready" class="filter-btn @(Model.CurrentStatusFilter == "ready" ? "active" : "")">Готовы</a>
+            <a href="?status=completed" class="filter-btn @(Model.CurrentStatusFilter == "completed" ? "active" : "")">Завершены</a>
+            <a href="?status=cancelled" class="filter-btn @(Model.CurrentStatusFilter == "cancelled" ? "active" : "")">Отменены</a>
+        </div>
+
+        @if (Model.Orders == null || !Model.Orders.Any())
+        {
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h5>Заказов не найдено</h5>
+                <p class="text-muted">Нет заказов с выбранным статусом</p>
+            </div>
+        }
+        else
+        {
+            foreach (var order in Model.Orders)
+            {
+                string statusClass = order.Status switch
+                {
+                    "Новый" => "status-new",
+                    "Готов" => "status-ready",
+                    "Завершён" => "status-completed",
+                    "Отменён" => "status-cancelled",
+                    _ => "status-new"
+                };
+                string statusIcon = order.Status switch
+                {
+                    "Новый" => "🟢",
+                    "Готов" => "🔵",
+                    "Завершён" => "✅",
+                    "Отменён" => "❌",
+                    _ => "📋"
+                };
+
+                <div class="order-card" id="order-@order.OrderId">
+                    <div class="order-header">
+                        <span class="order-number"><i class="bi bi-receipt"></i> Заказ №@order.OrderId</span>
+                        <span class="order-status-badge @statusClass">@statusIcon @order.Status</span>
+                    </div>
+                    <div class="order-body">
+                        <div class="order-info">
+                            <p><i class="bi bi-calendar3"></i> @order.OrderDate.ToString("dd.MM.yyyy HH:mm")</p>
+                            <p><i class="bi bi-person"></i> @order.CustomerName</p>
+                            <p><i class="bi bi-telephone"></i> @order.CustomerPhone</p>
+                            <p><i class="bi bi-geo-alt"></i> @order.DeliveryAddress</p>
+                        </div>
+                        <div class="order-total">
+                            <div class="order-price">@order.TotalAmount.ToString("N2") ₽</div>
+                            <div class="order-actions mt-2">
+                                <a href="/Order/Details?id=@order.OrderId" class="btn-sm-custom btn-outline-primary-custom">
+                                    <i class="bi bi-eye"></i> Детали
+                                </a>
+                                
+                                @if (isAdminOrManager)
+                                {
+                                    // Админ и менеджер могут всё
+                                    if (order.Status == "Новый")
+                                    {
+                                        <button type="button" class="btn-sm-custom btn-outline-success-custom" onclick="markAsReady(@order.OrderId)">
+                                            <i class="bi bi-check2-circle"></i> Отметить готовым
+                                        </button>
+                                    }
+                                    if (order.Status == "Готов")
+                                    {
+                                        <button type="button" class="btn-sm-custom btn-outline-info-custom" onclick="completeOrder(@order.OrderId)">
+                                            <i class="bi bi-check-all"></i> Завершить
+                                        </button>
+                                    }
+                                    if (order.Status != "Отменён" && order.Status != "Завершён")
+                                    {
+                                        <button type="button" class="btn-sm-custom btn-outline-danger-custom" onclick="cancelOrder(@order.OrderId)">
+                                            <i class="bi bi-x-circle"></i> Отмена
+                                        </button>
+                                    }
+                                }
+                                else if (isCourier)
+                                {
+                                    // Курьер может отмечать готовым и завершать, но НЕ может отменять
+                                    if (order.Status == "Новый")
+                                    {
+                                        <button type="button" class="btn-sm-custom btn-outline-success-custom" onclick="markAsReady(@order.OrderId)">
+                                            <i class="bi bi-check2-circle"></i> Отметить готовым
+                                        </button>
+                                    }
+                                    if (order.Status == "Готов")
+                                    {
+                                        <button type="button" class="btn-sm-custom btn-outline-info-custom" onclick="completeOrder(@order.OrderId)">
+                                            <i class="bi bi-check-all"></i> Завершить
+                                        </button>
+                                    }
+                                    <!-- Кнопка отмены НЕ показывается курьеру -->
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- Пагинация -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pagination-container">
+                @if (Model.CurrentPage > 1)
+                {
+                    <a href="?page=@(Model.CurrentPage - 1)&status=@Model.CurrentStatusFilter" class="page-link-custom">←</a>
+                }
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a href="?page=@i&status=@Model.CurrentStatusFilter" class="page-link-custom @(i == Model.CurrentPage ? "active" : "")">@i</a>
+                }
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a href="?page=@(Model.CurrentPage + 1)&status=@Model.CurrentStatusFilter" class="page-link-custom">→</a>
+                }
+            </div>
+        }
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function getToken() { return document.getElementById('__RequestVerificationToken')?.value || ''; }
+
+        function showNotification(message, type) {
+            var n = document.createElement('div');
+            n.className = 'alert alert-' + (type === 'success' ? 'success' : 'danger') + ' position-fixed top-0 end-0 m-3';
+            n.style.zIndex = '9999';
+            n.style.borderRadius = '12px';
+            n.style.fontWeight = '600';
+            n.style.zIndex = '10000';
+            n.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill') + ' me-2"></i> ' + message;
+            document.body.appendChild(n);
+            setTimeout(function() { n.remove(); }, 3000);
+        }
+
+        async function markAsReady(orderId) {
+            if (!confirm('Отметить заказ как готовый?')) return;
+            try {
+                const resp = await fetch('/Order/Index?handler=MarkAsReady', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'RequestVerificationToken': getToken(),
+                        'X-CSRF-TOKEN': getToken()
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    showNotification('Заказ отмечен как готовый', 'success');
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showNotification(result.message || 'Ошибка', 'danger');
+                }
+            } catch (e) {
+                console.error(e);
+                showNotification('Ошибка соединения', 'danger');
+            }
+        }
+
+        async function completeOrder(orderId) {
+            if (!confirm('Завершить заказ? Заказ будет отмечен как выполненный.')) return;
+            try {
+                const resp = await fetch('/Order/Index?handler=CompleteOrder', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'RequestVerificationToken': getToken(),
+                        'X-CSRF-TOKEN': getToken()
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    showNotification('Заказ завершён', 'success');
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showNotification(result.message || 'Ошибка', 'danger');
+                }
+            } catch (e) {
+                console.error(e);
+                showNotification('Ошибка соединения', 'danger');
+            }
+        }
+
+        async function cancelOrder(orderId) {
+            if (!confirm('Отменить заказ? Это действие необратимо.')) return;
+            try {
+                const resp = await fetch('/Order/Index?handler=CancelOrder', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'RequestVerificationToken': getToken(),
+                        'X-CSRF-TOKEN': getToken()
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    showNotification('Заказ отменён', 'success');
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showNotification(result.message || 'Ошибка', 'danger');
+                }
+            } catch (e) {
+                console.error(e);
+                showNotification('Ошибка соединения', 'danger');
+            }
+        }
+    </script>
+</body>
+</html>

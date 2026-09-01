@@ -1,0 +1,37 @@
+﻿@page
+@model MaxFood.Pages.FavoriteDish.DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>FavoriteDish</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FavoriteDish.AddedDate)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FavoriteDish.AddedDate)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.FavoriteDish.AppUser)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FavoriteDish.AppUser.PasswordHash)
+        </dd>
+        <dt class="col-sm-2">
+            Вариант блюда
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.FavoriteDish.DishVariant.SizeName)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.FavoriteDish.FavoriteDishId">Edit</a> |
+    <a asp-page="./MyFavoriteDish">Back to List</a>
+</div>

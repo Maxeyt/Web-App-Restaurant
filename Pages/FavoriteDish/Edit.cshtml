@@ -1,0 +1,47 @@
+﻿@page
+@model MaxFood.Pages.FavoriteDish.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>FavoriteDish</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="FavoriteDish.FavoriteDishId" />
+            <div class="form-group">
+                <label asp-for="FavoriteDish.AppUserId" class="control-label"></label>
+                <select asp-for="FavoriteDish.AppUserId" class="form-control" asp-items="ViewBag.AppUserId"></select>
+                <span asp-validation-for="FavoriteDish.AppUserId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FavoriteDish.DishVariantId" class="control-label"></label>
+                <select asp-for="FavoriteDish.DishVariantId" class="form-control" asp-items="ViewBag.DishVariantId"></select>
+                <span asp-validation-for="FavoriteDish.DishVariantId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FavoriteDish.AddedDate" class="control-label"></label>
+                <input asp-for="FavoriteDish.AddedDate" class="form-control" />
+                <span asp-validation-for="FavoriteDish.AddedDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./MyFavoriteDish">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

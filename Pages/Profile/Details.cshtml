@@ -1,0 +1,38 @@
+﻿@page
+@model MaxFood.Pages.Profile.DetailsModel
+@{
+    ViewData["Title"] = "Детали профиля";
+}
+
+<h1>Детали профиля</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Profile.ProfileId)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Profile.ProfileId)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Profile.FirstName)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Profile.FirstName)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Profile.LastName)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Profile.LastName)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Profile.Phone)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Profile.Phone)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Profile.Email)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Profile.Email)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Profile.RegistrationDate)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Profile.RegistrationDate)</dd>
+
+        <dt class="col-sm-2">@Html.DisplayNameFor(model => model.Profile.IsActive)</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Profile.IsActive)</dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.Profile.ProfileId" class="btn btn-warning">Редактировать</a>
+    <a asp-page="./Index" class="btn btn-secondary">Назад к списку</a>
+</div>

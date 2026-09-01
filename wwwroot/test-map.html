@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Test Map</title>
+    <style>
+        #map {
+            width: 100%;
+            height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=4530ebd5-c3bd-4620-9f04-530dc4d2f48b&lang=ru_RU"></script>
+    <script>
+        ymaps.ready(function () {
+            var map = new ymaps.Map('map', {
+                center: [46.3497, 48.0408],
+                zoom: 13
+            });
+            map.geoObjects.add(new ymaps.Placemark([46.3497, 48.0408], {
+                balloonContent: 'Тестовая метка'
+            }));
+        });
+    </script>
+</body>
+</html>

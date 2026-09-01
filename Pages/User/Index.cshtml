@@ -1,0 +1,333 @@
+﻿@page
+@model MaxFood.Pages.User.IndexModel
+@{
+    ViewData["Title"] = "Управление пользователями";
+    var role = HttpContext.Session.GetInt32("UserRole");
+    var currentUserId = HttpContext.Session.GetInt32("UserId");
+}
+
+@if (role != 4 && role != 3 && role != 2)
+{
+    <div class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="bi bi-shield-lock-fill me-2"></i>Доступ запрещён</h4>
+            <p>Эта страница доступна только администраторам и менеджерам.</p>
+            <a href="/" class="btn btn-outline-danger mt-2">← На главную</a>
+        </div>
+    </div>
+    return;
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MaxFood</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    @Html.AntiForgeryToken()
+    <style>
+        body { background-color: #f5f5f5; }
+        .role-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; display: inline-block; text-align: center; }
+        .role-admin { background: #dc3545; color: white; }
+        .role-manager { background: #fd7e14; color: white; }
+        .role-user { background: #198754; color: white; }
+        .role-courier { background: #0dcaf0; color: #000; }
+        .avatar-circle { width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; }
+        .table-custom { border-radius: 16px; overflow: hidden; }
+        .table-custom thead { background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); color: white; }
+        .table-custom th, .table-custom td { vertical-align: middle; padding: 12px; text-align: center; }
+        .table-custom td:first-child, .table-custom th:first-child { text-align: center; }
+        .table-custom td:nth-child(2), .table-custom th:nth-child(2) { text-align: left; }
+        .action-buttons { display: flex; gap: 8px; justify-content: center; }
+        .role-select-container { min-width: 180px; }
+        .role-select { padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; border: 1px solid #ddd; background-color: white; cursor: pointer; transition: all 0.2s ease; width: 100%; }
+        .role-select:hover { border-color: #0d6efd; }
+        .role-select:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 2px rgba(13,110,253,0.2); }
+        .role-select:disabled { opacity: 0.6; cursor: not-allowed; background-color: #e9ecef; }
+        .protected-badge { display: inline-block; padding: 5px 12px; background: #6c757d; color: white; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .btn-sm-custom { padding: 4px 12px; font-size: 0.75rem; border-radius: 20px; }
+        .btn-disabled-gray { background-color: #e9ecef !important; border-color: #ced4da !important; color: #6c757d !important; cursor: not-allowed !important; opacity: 0.65; pointer-events: none; }
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1100; }
+        .toast-custom { background: white; border-radius: 12px; padding: 12px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-top: 10px; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; }
+        .toast-success { border-left: 4px solid #198754; }
+        .toast-error { border-left: 4px solid #dc3545; }
+        @@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .spin { animation: spin 1s linear infinite; display: inline-block; }
+        @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container mt-4" style="max-width: 1400px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-people-fill me-2"></i> Управление пользователями</h2>
+            <a href="/Profile/MyProfile" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Вернуться в профиль
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Пользователь</th>
+                                <th>Email</th>
+                                <th>Телефон</th>
+                                <th>Роль</th>
+                                <th>Смена роли</th>
+                                <th>Управление</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var user in Model.Users)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@user.AppUserId</td>
+                                    <td style="text-align: left;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-circle">@(user.FullName.FirstOrDefault().ToString().ToUpper())</div>
+                                            <div>
+                                                <div class="fw-bold">@user.FullName</div>
+                                                <small class="text-muted">ID: @user.AppUserId</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>@user.Phone</td>
+                                    <td>
+                                        <span class="role-badge @(user.RoleName == "Admin" ? "role-admin" : user.RoleName == "Manager" ? "role-manager" : user.RoleName == "Courier" ? "role-courier" : "role-user")">
+                                            @if (user.RoleName == "Admin")
+                                            {
+                                                <i class="bi bi-shield-fill-check me-1"></i>
+                                                <text>Администратор</text>
+                                            }
+                                            else if (user.RoleName == "Manager")
+                                            {
+                                                <i class="bi bi-person-badge me-1"></i>
+                                                <text>Менеджер</text>
+                                            }
+                                            else if (user.RoleName == "Courier")
+                                            {
+                                                <i class="bi bi-truck me-1"></i>
+                                                <text>Курьер</text>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-person me-1"></i>
+                                                <text>Пользователь</text>
+                                            }
+                                        </span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div class="role-select-container">
+                                            @if (user.RoleName == "Admin")
+                                            {
+                                                <span class="protected-badge"><i class="bi bi-shield-lock"></i> Недоступно</span>
+                                            }
+                                            else if (user.AppUserId == currentUserId)
+                                            {
+                                                <span class="protected-badge"><i class="bi bi-person"></i> Своя роль</span>
+                                            }
+                                            else
+                                            {
+                                                // Если текущий пользователь - менеджер (role == 3), делаем select недоступным
+                                                if (role == 3)
+                                                {
+                                                    <select class="role-select" disabled>
+                                                        <option value="">-- Смена роли недоступна --</option>
+                                                        @if (user.RoleId == 1) { <option value="1" selected>👤 Пользователь</option> }
+                                                        else { <option value="1">👤 Пользователь</option> }
+                                                        @if (user.RoleId == 2) { <option value="2" selected>🚚 Курьер</option> }
+                                                        else { <option value="2">🚚 Курьер</option> }
+                                                        @if (user.RoleId == 3) { <option value="3" selected>👔 Менеджер</option> }
+                                                        else { <option value="3">👔 Менеджер</option> }
+                                                    </select>
+                                                }
+                                                else if (role == 4 || role == 3)
+                                                {
+                                                    <select class="role-select" 
+                                                            data-user-id="@user.AppUserId" 
+                                                            data-current-role="@user.RoleId" 
+                                                            onchange="changeUserRole(this)">
+                                                        <option value="">-- Сменить роль --</option>
+                                                        @if (user.RoleId == 1) { <option value="1" selected>👤 Пользователь</option> } 
+                                                        else { <option value="1">👤 Пользователь</option> }
+                                                        @if (user.RoleId == 2) { <option value="2" selected>🚚 Курьер</option> } 
+                                                        else { <option value="2">🚚 Курьер</option> }
+                                                        @if (user.RoleId == 3) { <option value="3" selected>👔 Менеджер</option> } 
+                                                        else { <option value="3">👔 Менеджер</option> }
+                                                    </select>
+                                                }
+                                                else if (role == 2)
+                                                {
+                                                    <select class="role-select" 
+                                                            data-user-id="@user.AppUserId" 
+                                                            data-current-role="@user.RoleId" 
+                                                            onchange="changeUserRole(this)">
+                                                        <option value="">-- Сменить роль --</option>
+                                                        @if (user.RoleId == 1) { <option value="1" selected>👤 Пользователь</option> } 
+                                                        else { <option value="1">👤 Пользователь</option> }
+                                                        @if (user.RoleId == 2) { <option value="2" selected>🚚 Курьер</option> } 
+                                                        else { <option value="2">🚚 Курьер</option> }
+                                                    </select>
+                                                }
+                                                else { <span class="text-muted small">—</span> }
+                                            }
+                                        </div>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div class="action-buttons">
+                                            @if (user.RoleName == "Admin")
+                                            {
+                                                <span class="protected-badge"><i class="bi bi-shield-lock"></i> Защищено</span>
+                                            }
+                                            else
+                                            {
+                                                // Если текущий пользователь - менеджер (role == 3), показываем неактивные серые кнопки
+                                                if (role == 3)
+                                                {
+                                                    <a href="#" class="btn btn-outline-secondary btn-sm btn-sm-custom btn-disabled-gray" onclick="return false;">
+                                                        <i class="bi bi-pencil"></i> Редактировать
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-sm-custom btn-disabled-gray" disabled>
+                                                        <i class="bi bi-trash"></i> Удалить
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <a href="/User/Edit?id=@user.AppUserId" class="btn btn-outline-primary btn-sm btn-sm-custom">
+                                                        <i class="bi bi-pencil"></i> Редактировать
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm btn-sm-custom" onclick="deleteUser(@user.AppUserId)">
+                                                        <i class="bi bi-trash"></i> Удалить
+                                                    </button>
+                                                }
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="text-muted text-center mt-4 small">
+            <i class="bi bi-info-circle me-1"></i> Всего пользователей: @Model.Users.Count
+        </div>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-custom toast-${type}`;
+            toast.innerHTML = `<i class="bi ${type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function getAntiForgeryToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        }
+
+        async function changeUserRole(selectElement) {
+            const userId = parseInt(selectElement.dataset.userId);
+            const newRoleId = parseInt(selectElement.value);
+            const currentRole = parseInt(selectElement.dataset.currentRole);
+
+            if (isNaN(userId) || userId <= 0) {
+                showToast('Ошибка: ID пользователя не определён', 'error');
+                selectElement.value = currentRole;
+                return;
+            }
+
+            if (!newRoleId) {
+                selectElement.value = currentRole;
+                return;
+            }
+
+            if (newRoleId === currentRole) {
+                showToast('Роль не изменилась', 'error');
+                selectElement.value = currentRole;
+                return;
+            }
+
+            selectElement.disabled = true;
+
+            try {
+                const response = await fetch('/User/Index?handler=ChangeUserRole', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getAntiForgeryToken()
+                    },
+                    body: JSON.stringify({ 
+                        userId: userId, 
+                        newRoleId: newRoleId 
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Роль успешно изменена', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(`❌ ${result.message || 'Ошибка изменения роли'}`, 'error');
+                    selectElement.value = currentRole;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('❌ Ошибка соединения с сервером', 'error');
+                selectElement.value = currentRole;
+            } finally {
+                selectElement.disabled = false;
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm('Вы действительно хотите удалить этого пользователя?')) return;
+
+            try {
+                const response = await fetch('/User/Index?handler=DeleteUser', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getAntiForgeryToken()
+                    },
+                    body: JSON.stringify({ userId: userId })
+                });
+
+                if (!response.ok) throw new Error('HTTP error');
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('✅ Пользователь удалён', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(`❌ ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('❌ Ошибка соединения', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

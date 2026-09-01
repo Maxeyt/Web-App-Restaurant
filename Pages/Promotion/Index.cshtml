@@ -1,0 +1,128 @@
+﻿@page
+@model MaxFood.Pages.Promotion.IndexModel
+@{
+    ViewData["Title"] = "Акции";
+}
+
+<div class="container mt-3">
+    <div class="bg-white p-4" style="border: 1px solid #dee2e6; border-radius: 12px;">
+
+        <div class="text-center mb-4">
+            <i class="bi bi-tags-fill" style="font-size: 32px; color: #28a745;"></i>
+            <h2 class="fw-bold mt-2" style="font-size: 1.1rem; letter-spacing: -0.3px;">Акции</h2>
+            <p class="text-muted small">Успейте заказать со скидкой</p>
+        </div>
+
+        @if (!Model.PromotionsList.Any())
+        {
+            <div class="text-center py-5" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 12px;">
+                <i class="bi bi-gift fs-1 mb-3 d-block" style="color: #6c757d;"></i>
+                <h4 style="font-weight: 600; font-size: 1rem;">Акций пока нет</h4>
+                <p class="text-muted small mb-4">Загляните позже</p>
+                <a href="/Menu" class="btn px-4" style="background: #28a745; color: white; border-radius: 8px;">Перейти в меню</a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var promo in Model.PromotionsList)
+                {
+                    var promoEmoji = "🎁";
+                    if (promo.PromotionName.Contains("Пицца")) promoEmoji = "🍕";
+                    else if (promo.PromotionName.Contains("роллы") || promo.PromotionName.Contains("Роллы")) promoEmoji = "🍣";
+                    else if (promo.PromotionName.Contains("Комбо")) promoEmoji = "🍱";
+                    else if (promo.PromotionName.Contains("Счастливые")) promoEmoji = "⏰";
+                    else if (promo.PromotionName.Contains("День рождения")) promoEmoji = "🎂";
+                    else if (promo.PromotionName.Contains("Семейный")) promoEmoji = "👨‍👩‍👧‍👦";
+
+                    <div class="col-md-2-4">
+                        <div class="card h-100 promo-card" data-promotion-id="@promo.PromotionId" style="border: 1px solid #dee2e6; cursor: pointer; border-radius: 12px;">
+                            <div class="card-body p-3 text-center">
+                                <div style="background-color: @(string.IsNullOrEmpty(promo.IconColor) ? "#28a745" : promo.IconColor); padding: 12px 8px; text-align: center; margin: 0 auto 12px auto; width: 80%; border-radius: 10px;">
+                                    <div style="width: 56px; height: 56px; background-color: rgba(255,255,255,0.2); margin: 0 auto; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                        @if (!string.IsNullOrEmpty(promo.IconImagePath))
+                                        {
+                                            <img src="@promo.IconImagePath" style="width: 36px; height: 36px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <span style="font-size: 1.8rem;">@promoEmoji</span>
+                                        }
+                                    </div>
+                                </div>
+                                <h5 class="fw-bold mb-2" style="font-size: 0.85rem; color: #212529;">@promo.PromotionName</h5>
+                                @if (promo.DiscountType == "promocode" && !string.IsNullOrEmpty(promo.PromocodeValue))
+                                {
+                                    <span class="badge" style="background: #0d6efd; font-size: 0.65rem; border-radius: 6px;">Промокод</span>
+                                }
+                                else if (promo.DiscountPercent.HasValue && promo.DiscountPercent.Value > 0)
+                                {
+                                    <span class="badge" style="background: #dc3545; font-size: 0.65rem; border-radius: 6px;">-@promo.DiscountPercent.Value%</span>
+                                }
+                                <div class="small mt-2" style="color: #6c757d;">
+                                    @promo.ValidFrom.ToString("dd.MM") - @promo.ValidTo.ToString("dd.MM.yyyy")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="text-center mt-4 pt-2">
+            <a href="/Menu" class="btn px-4" style="background: transparent; border: 1px solid #28a745; color: #28a745; border-radius: 8px;">
+                ← Вернуться в меню
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .col-md-2-4 {
+        flex: 0 0 20%;
+        max-width: 20%;
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+
+    @@media (max-width: 992px) {
+        .col-md-2-4 {
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .col-md-2-4 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .col-md-2-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    .promo-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        border-radius: 12px !important;
+    }
+
+        .promo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,.12) !important;
+        }
+</style>
+
+<script>
+    document.querySelectorAll('.promo-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const promoId = this.dataset.promotionId;
+            if (promoId) window.location.href = '/Promotion/Details/' + promoId;
+        });
+    });
+</script>

@@ -1,0 +1,1077 @@
+﻿@page
+@model MaxFood.Pages.Profile.MyProfileModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = "Мой профиль";
+    var activeTab = Model.ActiveTab ?? "personal";
+    var bonusSubTab = Model.BonusSubTab ?? "bonus";
+    var cashbackSubTab = Model.CashbackSubTab ?? "regular";
+    var addressesSubTab = Model.AddressesSubTab ?? "delivery";
+    var role = HttpContext.Session.GetInt32("UserRole");
+    var requestToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MaxFood</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif !important; letter-spacing: -0.3px; }
+        .bi, .bi::before, [class*=" bi-"], [class^="bi-"] { font-family: 'bootstrap-icons' !important; }
+        body { background-color: #f5f5f5; margin: 0; padding: 0; }
+        .profile-locked-input { border: 1px solid #dee2e6 !important; background-color: #f8f9fa !important; color: #6c757d !important; cursor: not-allowed !important; }
+        .map-container { border-radius: 12px; overflow: hidden; border: 1px solid #dee2e6; margin: 16px auto; }
+        #yandexMap { width: 100%; height: 350px; background: #f8f9fa; }
+        .search-wrapper { position: relative; margin-bottom: 16px; }
+        .search-input-wrapper { display: flex; align-items: center; border: 1px solid #dee2e6; border-radius: 8px; background: white; overflow: hidden; padding: 4px 8px; }
+        .search-input-wrapper:focus-within { border-color: #2b8c4a; box-shadow: 0 0 0 2px rgba(43,140,74,0.1); }
+        .search-icon { padding-left: 8px; color: #6c757d; font-size: 0.85rem; }
+        #mapSearchInput { flex: 1; padding: 8px 12px; border: none; font-size: 0.85rem; outline: none; background: transparent; }
+        .search-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6; border-radius: 8px; margin-top: 4px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .search-suggestions.show { display: block; }
+        .suggestion-item { padding: 10px 14px; cursor: pointer; font-size: 0.8rem; border-bottom: 1px solid #f0f0f0; }
+        .suggestion-item:hover { background-color: #f0f7ff; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .address-pills { display: flex; gap: 12px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+        .address-pill { display: flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 8px; border: 1px solid #dee2e6; background: white; cursor: pointer; transition: all 0.2s; }
+        .address-pill:hover { border-color: #2b8c4a; background: #f0fff4; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .address-pill.selected { border-color: #2b8c4a !important; background: #e8f5e9 !important; box-shadow: 0 4px 12px rgba(43,140,74,0.2); }
+        .pill-marker { font-size: 1.2rem; }
+        .pill-name { font-weight: 700; font-size: 0.85rem; }
+        .pill-address { font-size: 0.7rem; color: #6c757d; }
+        .address-card { background: white; border: 1px solid #e9ecef; border-radius: 8px; margin-bottom: 12px; overflow: hidden; position: relative; transition: all 0.2s; }
+        .address-card.default { border-color: #2b8c4a; background: #f8fff8; }
+        .address-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .address-card-top { display: flex; align-items: center; padding: 14px 16px; gap: 12px; cursor: pointer; }
+        .address-info { flex: 1; }
+        .address-comment { margin: 0 16px 12px; font-size: 0.7rem; color: #6c757d; background: #f8f9fa; padding: 6px 10px; border-radius: 8px; }
+        .address-card-actions { display: flex; gap: 8px; padding: 10px 16px; justify-content: flex-end; border-top: 1px solid #f0f0f0; background: #fafbfc; }
+        .default-badge { position: absolute; top: 12px; right: 16px; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.95); padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; border: 1px solid #e9ecef; z-index: 2; }
+        .payment-card { border-radius: 12px; padding: 20px; margin-bottom: 16px; color: white; position: relative; background: linear-gradient(135deg, #2b8c4a 0%, #1e6b38 100%); transition: transform 0.2s; }
+        .payment-card.default { border: 3px solid #ffd700; }
+        .payment-card:hover { transform: translateY(-2px); }
+        .bonus-history-item { padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; }
+        .bonus-history-item.bonus-type-bonus { background: #d4edda; border-left: 4px solid #2b8c4a; }
+        .bonus-history-item.bonus-type-cashback { background: #dbeafe; border-left: 4px solid #0d6efd; }
+        .category-check-card { cursor: pointer; transition: all 0.3s ease; border: 2px solid #e9ecef !important; border-radius: 8px; }
+        .category-check-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+        .category-check-card.selected { background: linear-gradient(135deg, #f0fff4 0%, #e8f5e9 100%) !important; border-color: #2b8c4a !important; }
+        .delivery-actions { display: flex; gap: 12px; margin: 20px 0; justify-content: center; flex-wrap: wrap; }
+        .empty-state { text-align: center; padding: 50px 20px; color: #6c757d; }
+        .empty-state i { font-size: 3.5rem; display: block; margin-bottom: 16px; opacity: 0.5; }
+        .section-title { text-align: center; margin-bottom: 24px; font-weight: 800; font-size: 1.4rem; color: #1a2a1c; letter-spacing: -0.5px; }
+        .tabs-centered { display: flex; justify-content: center; gap: 12px; max-width: 500px; margin: 0 auto 24px; }
+        .nav-pills .nav-link { border-radius: 10px !important; padding: 8px 28px; font-weight: 600; font-size: 0.85rem; }
+        .nav-pills .nav-link.active { background-color: #2b8c4a !important; color: white !important; }
+        .btn-outline-primary { border-color: #2b8c4a; color: #2b8c4a; border-radius: 8px; }
+        .btn-outline-primary:hover { background-color: #2b8c4a; border-color: #2b8c4a; }
+        .btn-primary { background-color: #2b8c4a; border-color: #2b8c4a; border-radius: 8px; }
+        .btn-primary:hover { background-color: #236f3d; border-color: #236f3d; }
+        .btn-success { background-color: #2b8c4a; border-color: #2b8c4a; border-radius: 8px; }
+        .order-card { border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.2s; margin-bottom: 16px; }
+        .order-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .order-status { padding: 10px 16px; font-weight: 600; font-size: 0.85rem; text-align: center; color: white; }
+        .order-status.status-new { background-color: #2b8c4a; }
+        .order-status.status-ready { background-color: #0d6efd; }
+        .order-status.status-other { background-color: #6c757d; }
+        .order-status.status-completed { background-color: #6c757d; }
+        .order-status.status-cancelled { background-color: #dc3545; }
+        .order-body { padding: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .order-number { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+        .order-price { font-size: 1.3rem; font-weight: 700; color: #2b8c4a; }
+        .btn-order-details { display: inline-block; padding: 6px 16px; border: 1px solid #2b8c4a; border-radius: 8px; font-size: 0.75rem; font-weight: 500; color: #2b8c4a; background: transparent; text-decoration: none; transition: all 0.2s; }
+        .btn-order-details:hover { background: #2b8c4a; color: white; text-decoration: none; transform: translateY(-1px); }
+        .order-comment { margin-top: 8px; font-size: 0.75rem; color: #6c757d; background: #f8f9fa; padding: 6px 10px; border-radius: 8px; }
+        .bonus-balance-card { max-width: 450px; margin: 0 auto 24px; background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-radius: 12px; text-align: center; padding: 24px; }
+        .bonus-balance-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .bonus-balance-amount { font-weight: 700; color: #2b8c4a; margin-bottom: 8px; }
+        .promocode-card { border-radius: 12px; padding: 20px; text-align: center; }
+        .promocode-card.active { border: 2px solid #2b8c4a; background: #f8fff8; }
+        .promocode-card.used { background: #e9ecef; opacity: 0.7; }
+        .promocode-code { font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
+        .promocode-discount { font-weight: 700; font-size: 1.2rem; color: #dc3545; margin-bottom: 4px; }
+        .promocode-card.used .promocode-discount { color: #6c757d; }
+        .sidebar { width: 280px; min-width: 280px; border-right: 1px solid #dee2e6; background-color: #f8f9fa; padding: 24px 0; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 0 20px 16px; font-weight: 800; font-size: 1.1rem; border-bottom: 1px solid #dee2e6; }
+        .sidebar-link { display: block; text-decoration: none; padding: 10px 20px; font-size: 0.9rem; color: #212529; font-weight: 500; }
+        .sidebar-link.active { background-color: #2b8c4a; color: white; font-weight: 600; }
+        .sidebar-link:hover:not(.active) { background-color: #e9ecef; }
+        .sidebar-link.text-danger:hover { background-color: #f8d7da; }
+        .sidebar-divider { border-top: 1px solid #dee2e6; margin: 16px 20px; }
+        .sidebar-admin-label { padding: 4px 20px 8px; font-weight: 700; font-size: 0.7rem; color: #856404; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid #dee2e6; margin: 20px; }
+        .profile-container { border: 1px solid #dee2e6; border-radius: 16px; overflow: hidden; min-height: 550px; background-color: white; display: flex; flex-direction: row; }
+        .profile-content { flex-grow: 1; padding: 30px; background: white; }
+        .tab-content { display: none; }
+        .tab-content.active-tab { display: block; }
+        .bonus-sub-content, .cashback-sub-content, .addresses-sub-content { display: none; }
+        .bonus-sub-content.active, .cashback-sub-content.active, .addresses-sub-content.active { display: block; }
+        .stat-card { background: white; border: 1px solid #e9ecef; border-radius: 16px; transition: all 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        .period-btn { border-radius: 30px; padding: 6px 20px; font-size: 0.75rem; font-weight: 700; transition: all 0.2s; border: 1px solid #dee2e6; background: white; color: #495057; }
+        .period-btn:hover { border-color: #2b8c4a; color: #2b8c4a; }
+        .period-btn.active { background: #2b8c4a; border-color: #2b8c4a; color: white; }
+        .stat-number { font-weight: 800; font-size: 1.4rem; color: #2b8c4a; }
+        .stat-label { font-size: 0.65rem; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.3px; }
+        .stat-divider { width: 30px; height: 2px; background: #2b8c4a; margin: 8px auto; }
+        .info-badge { background: #e8f5e9; color: #2b8c4a; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+        .sub-tab-btn { border-radius: 30px !important; padding: 6px 20px !important; font-size: 0.75rem !important; font-weight: 600 !important; }
+        @@media (max-width: 768px) {
+            .address-pills { flex-wrap: wrap; }
+            .sidebar { border-right: none; border-bottom: 1px solid #dee2e6; width: 100%; }
+            .profile-container { flex-direction: column; }
+            .stat-number { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <input type="hidden" id="requestVerificationToken" value="@requestToken" />
+
+    <div class="container-fluid mt-4 px-3" style="max-width: 1280px;">
+        <div class="profile-container">
+            <div class="sidebar">
+                <div class="sidebar-header"><i class="bi bi-person-circle me-2"></i> Профиль</div>
+                <a href="#" class="sidebar-link" data-tab="personal"><i class="bi bi-person me-2"></i> Личные данные</a>
+                <a href="#" class="sidebar-link" data-tab="orders"><i class="bi bi-box-seam me-2"></i> Мои заказы</a>
+                <a href="#" class="sidebar-link" data-tab="userbonuses"><i class="bi bi-gift me-2"></i> Бонусы и промокоды</a>
+                <a href="#" class="sidebar-link" data-tab="payment"><i class="bi bi-credit-card me-2"></i> Способы оплаты</a>
+                <a href="#" class="sidebar-link" data-tab="addresses"><i class="bi bi-geo-alt me-2"></i> Адреса</a>
+                @if (role == 4 || role == 3 || role == 2)
+                {
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-admin-label"><i class="bi bi-shield-lock-fill me-1"></i> Управление</div>
+                    <a href="/Order/Index" class="sidebar-link"><i class="bi bi-box-seam me-2"></i> Заказы</a>
+                    @if (role == 4 || role == 3)
+                    {
+                        <a href="/Dish/Index" class="sidebar-link"><i class="bi bi-egg-fill me-2"></i> Блюда</a>
+                        <a href="/User/Index" class="sidebar-link"><i class="bi bi-people-fill me-2"></i> Пользователи</a>
+                        <a href="/Notification/Index" class="sidebar-link"><i class="bi bi-bell-fill me-2"></i> Уведомления</a>
+                        <a href="/Promotion/AdminIndex" class="sidebar-link"><i class="bi bi-tags-fill me-2"></i> Акции, бонусы и промокоды</a>
+                    }
+                }
+                @if (role == 4)
+                {
+                    <div class="sidebar-divider"></div>
+                    <div class="sidebar-admin-label"><i class="bi bi-graph-up me-1"></i> Аналитика</div>
+                    <a href="#" class="sidebar-link" data-tab="statistics"><i class="bi bi-graph-up me-2"></i> Статистика</a>
+                }
+                <div class="sidebar-footer"><a href="/Authorization/Logout" class="sidebar-link text-danger"><i class="bi bi-box-arrow-right me-2"></i> Выйти</a></div>
+            </div>
+
+            <div class="profile-content">
+                <div id="tab-personal" class="tab-content @(activeTab == "personal" ? "active-tab" : "")">
+                    <h5 class="section-title"><i class="bi bi-person me-2"></i> Личные данные</h5>
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show mx-auto" style="max-width:450px;">
+                            @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    <form method="post" class="mx-auto" style="max-width:450px;" id="personalForm">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3"><label class="form-label fw-bold">Имя</label><input type="text" asp-for="FirstName" class="form-control" style="border-radius:8px;" /></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Фамилия</label><input type="text" asp-for="LastName" class="form-control" style="border-radius:8px;" /></div>
+                        <div class="mb-3"><label class="form-label fw-bold">Телефон</label><input type="text" value="@Model.Phone" class="form-control profile-locked-input" style="border-radius:8px;" readonly disabled /></div>
+                        <div class="mb-4"><label class="form-label fw-bold">E-mail</label><input type="email" asp-for="Email" class="form-control" style="border-radius:8px;" /></div>
+                        <button type="submit" class="btn btn-primary px-5" style="border-radius:8px;"><i class="bi bi-save me-2"></i> Сохранить</button>
+                    </form>
+                </div>
+
+                <div id="tab-orders" class="tab-content @(activeTab == "orders" ? "active-tab" : "")">
+                    <h5 class="section-title"><i class="bi bi-box-seam me-2"></i> Мои заказы</h5>
+                    @if (Model.NewOrders.Any() || Model.OrderHistory.Any())
+                    {
+                        <div class="row g-4">
+                            @if (Model.NewOrders.Any())
+                            {
+                                <div class="col-12"><h6 class="text-primary mb-3"><i class="bi bi-clock-history me-1"></i> Новые</h6></div>
+                                foreach (var item in Model.NewOrders)
+                                {
+                                    string statusClass = "status-other";
+                                    string displayStatus = item.Status;
+                                    if (item.Status == "Новый") { statusClass = "status-new"; displayStatus = "Новый"; }
+                                    else if (item.Status == "Готов") { statusClass = "status-ready"; displayStatus = "Готов"; }
+                                    else if (item.Status == "Выдан" || item.Status == "Завершен" || item.Status == "Завершён") { statusClass = "status-completed"; displayStatus = "Выдан"; }
+                                    else if (item.Status == "Отменён" || item.Status == "Отменен") { statusClass = "status-cancelled"; displayStatus = "Отменён"; }
+                                    <div class="col-12">
+                                        <div class="order-card">
+                                            <div class="order-status @statusClass">Статус: @displayStatus</div>
+                                            <div class="order-body">
+                                                <div class="order-info">
+                                                    <h5 class="order-number">Заказ №@item.OrderId</h5>
+                                                    <small class="text-muted"><i class="bi bi-calendar3 me-1"></i> @item.OrderDate.ToString("dd.MM.yyyy HH:mm")</small>
+                                                    @if (!string.IsNullOrEmpty(item.PointPickupName)) { <p class="mt-2 mb-0"><i class="bi bi-shop me-1"></i> @item.PointPickupName</p> }
+                                                    @if (!string.IsNullOrEmpty(item.Comment)) { <div class="order-comment"><i class="bi bi-chat-dots me-1"></i> @item.Comment</div> }
+                                                </div>
+                                                <div class="order-total"><div class="order-price">@item.TotalAmount.ToString("C")</div><a href="/Order/Details?id=@item.OrderId" class="btn-order-details">Детали →</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            @if (Model.OrderHistory.Any())
+                            {
+                                <div class="col-12 mt-4"><h6 class="text-secondary mb-3"><i class="bi bi-archive me-1"></i> История</h6></div>
+                                foreach (var item in Model.OrderHistory)
+                                {
+                                    string statusClass = "status-other";
+                                    string displayStatus = item.Status;
+                                    if (item.Status == "Готов") { statusClass = "status-ready"; displayStatus = "Готов"; }
+                                    else if (item.Status == "Выдан" || item.Status == "Завершен" || item.Status == "Завершён") { statusClass = "status-completed"; displayStatus = "Выдан"; }
+                                    else if (item.Status == "Отменён" || item.Status == "Отменен") { statusClass = "status-cancelled"; displayStatus = "Отменён"; }
+                                    else if (item.Status == "Новый") { statusClass = "status-new"; displayStatus = "Новый"; }
+                                    <div class="col-12">
+                                        <div class="order-card">
+                                            <div class="order-status @statusClass">Статус: @displayStatus</div>
+                                            <div class="order-body">
+                                                <div class="order-info"><h5 class="order-number">Заказ №@item.OrderId</h5><small class="text-muted"><i class="bi bi-calendar3 me-1"></i> @item.OrderDate.ToString("dd.MM.yyyy HH:mm")</small></div>
+                                                <div class="order-total"><div class="order-price">@item.TotalAmount.ToString("C")</div><a href="/Order/Details?id=@item.OrderId" class="btn-order-details">Детали →</a></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state"><i class="bi bi-inbox"></i><h4>У вас пока нет заказов</h4><p>Перейдите в меню, чтобы сделать первый заказ</p><a href="/Menu/Index" class="btn btn-primary px-4" style="border-radius:8px;">Перейти в меню</a></div>
+                    }
+                </div>
+
+                <div id="tab-userbonuses" class="tab-content @(activeTab == "userbonuses" ? "active-tab" : "")">
+                    <h5 class="section-title"><i class="bi bi-gift me-2"></i> Бонусы и промокоды</h5>
+                    <div class="tabs-centered">
+                        <ul class="nav nav-pills" id="bonusSubTabs">
+                            <li class="nav-item"><a class="nav-link @(bonusSubTab == "bonus" ? "active" : "")" href="#" data-bonus-subtab="bonus">💰 Бонусы</a></li>
+                            <li class="nav-item"><a class="nav-link @(bonusSubTab == "coupons" ? "active" : "")" href="#" data-bonus-subtab="coupons">🎫 Промокоды</a></li>
+                        </ul>
+                    </div>
+                    <div id="bonusSubContent">
+                        <div id="bonus-bonus" class="bonus-sub-content @(bonusSubTab == "bonus" ? "active" : "")">
+                            <div class="bonus-balance-card"><div class="bonus-balance-icon">💰</div><h3 class="bonus-balance-amount">@Model.BonusTotal.ToString("N2") ₽</h3><p class="text-muted mb-3">Ваш бонусный баланс</p><a href="/Menu/Index" class="btn btn-success px-4" style="border-radius:8px;"><i class="bi bi-cart me-1"></i> Потратить бонусы</a></div>
+                            <div class="tabs-centered">
+                                <ul class="nav nav-pills" id="cashbackSubTabs">
+                                    <li class="nav-item"><a class="nav-link @(cashbackSubTab == "regular" ? "active" : "")" href="#" data-cashback-subtab="regular">📋 Обычный кешбэк</a></li>
+                                    <li class="nav-item"><a class="nav-link @(cashbackSubTab == "boosted" ? "active" : "")" href="#" data-cashback-subtab="boosted">🚀 Повышенный кешбэк</a></li>
+                                </ul>
+                            </div>
+                            <div id="cashbackSubContent">
+                                <div id="cashback-regular" class="cashback-sub-content @(cashbackSubTab == "regular" ? "active" : "")">
+                                    <h6 class="mb-3"><i class="bi bi-clock-history me-2"></i> История операций</h6>
+                                    @if (Model.BonusHistory.Any())
+                                    {
+                                        foreach (var item in Model.BonusHistory)
+                                        {
+                                            <div class="bonus-history-item @(item.Type == "bonus" ? "bonus-type-bonus" : "bonus-type-cashback") mx-auto" style="max-width:500px;">
+                                                <div class="d-flex justify-content-between align-items-center"><div><strong>+@item.Amount.ToString("N2") ₽</strong><br /><small class="text-muted">@item.AccrualDate.ToString("dd.MM.yyyy")</small></div><small class="text-muted">Сгорит: @item.ExpiryDate.ToString("dd.MM.yyyy")</small></div>
+                                            </div>
+                                        }
+                                    }
+                                    else { <div class="empty-state"><i class="bi bi-inbox"></i><p>История пуста</p></div> }
+                                </div>
+                                <div id="cashback-boosted" class="cashback-sub-content @(cashbackSubTab == "boosted" ? "active" : "")">
+                                    <div id="cashbackAlerts"></div>
+                                    <form method="post" asp-page-handler="SaveCategories" id="cashbackForm">
+                                        @Html.AntiForgeryToken()
+                                        <div class="text-center mb-3"><span class="badge bg-primary p-2" style="border-radius:8px;">Выбрано: <strong id="selectedCountDisplay">@Model.SelectedCategoryIds.Count</strong> из 3</span></div>
+                                        <div class="row g-3 justify-content-center mb-4" id="categoriesCheckboxContainer">
+                                            @foreach (var cat in Model.AllCashbackCategories)
+                                            {
+                                                var isSelected = Model.SelectedCategoryIds.Contains(cat.Id);
+                                                <div class="col-6 col-md-4 col-lg-3">
+                                                    <div class="card h-100 category-check-card @(isSelected ? "selected" : "")" data-category-id="@cat.Id" onclick="toggleCategoryCheckbox(@cat.Id, this)">
+                                                        <div class="card-body text-center py-3"><div class="fs-2 mb-2">@cat.Icon</div><h6 class="fw-bold mb-1">@cat.CategoryName</h6><span class="badge @(isSelected ? "bg-primary" : "bg-secondary") mb-2" style="border-radius:8px;">@cat.CashbackPercent%</span><input type="checkbox" name="selectedCategoryIds" value="@cat.Id" @(isSelected ? "checked" : "") style="display:none;" /></div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                        <button type="submit" class="btn btn-primary px-5" style="border-radius:8px;"><i class="bi bi-save me-1"></i> Сохранить категории</button>
+                                    </form>
+                                    <h6 class="mb-3 mt-4"><i class="bi bi-clock-history me-2"></i> История повышенного кешбэка</h6>
+                                    @if (Model.BoostedBonusHistory.Any())
+                                    {
+                                        foreach (var item in Model.BoostedBonusHistory)
+                                        {
+                                            <div class="bonus-history-item bonus-type-cashback mx-auto" style="max-width:500px;"><div class="d-flex justify-content-between align-items-center"><div><strong>+@item.Amount.ToString("N2") ₽</strong><br /><small>@item.AccrualDate.ToString("dd.MM.yyyy")</small></div><small class="text-muted">@item.Source</small></div></div>
+                                        }
+                                    }
+                                    else { <div class="empty-state"><i class="bi bi-inbox"></i><p>История пуста</p></div> }
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bonus-coupons" class="bonus-sub-content @(bonusSubTab == "coupons" ? "active" : "")">
+                            <h6 class="mb-3 text-success"><i class="bi bi-ticket-perforated me-1"></i> Мои промокоды</h6>
+                            @if (Model.ActivePromocodesList.Any())
+                            {
+                                <div class="row g-3 justify-content-center mb-4">
+                                    @foreach (var c in Model.ActivePromocodesList)
+                                    {
+                                        <div class="col-md-5">
+                                            <div class="promocode-card active" style="border-radius:12px;">
+                                                <h5 class="promocode-code">@c.Code</h5>
+                                                @if (c.DiscountPercent > 0) { <p class="promocode-discount">-@c.DiscountPercent%</p> }
+                                                @if (c.IsSaved && c.SavedAt.HasValue) { <small class="text-muted d-block">Сохранён: @c.SavedAt.Value.ToString("dd.MM.yyyy")</small> }
+                                                <small class="text-muted">До: @c.ValidTo.ToString("dd.MM.yyyy")</small>
+                                                <div class="mt-2"><button class="btn btn-sm btn-outline-success copy-promo-btn" data-code="@c.Code" style="border-radius:6px;"><i class="bi bi-clipboard"></i> Скопировать</button></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="empty-state"><i class="bi bi-ticket-perforated"></i><p>У вас пока нет сохранённых промокодов</p><a href="/Promotion/Index" class="btn btn-sm btn-success mt-2">Посмотреть акции →</a></div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-payment" class="tab-content @(activeTab == "payment" ? "active-tab" : "")">
+                    <h5 class="section-title"><i class="bi bi-credit-card me-2"></i> Способы оплаты</h5>
+                    <div style="max-width:500px; margin:0 auto;">
+                        @if (Model.UserPayments != null && Model.UserPayments.Any())
+                        {
+                            foreach (var pay in Model.UserPayments)
+                            {
+                                var maskedNumber = "•••• " + (pay.CardNumber?.Length >= 4 ? pay.CardNumber[^4..] : "****");
+                                <div class="payment-card @(pay.IsDefault ? "default" : "")" id="payment-@pay.PaymentId" data-full-number="@pay.CardNumber" data-cvv="@pay.CardHolder" data-expiry="@pay.ExpiryDate" data-isdefault="@pay.IsDefault.ToString().ToLower()">
+                                    <div style="position: absolute; top: 12px; right: 16px; display: flex; align-items: center; gap: 8px;"><input class="form-check-input default-payment-checkbox" type="checkbox" data-payment-id="@pay.PaymentId" @(pay.IsDefault ? "checked" : "") onchange="toggleDefaultPayment(this)" /><span class="small">Основной</span></div>
+                                    <div class="card-number fs-4 fw-bold tracking-wide">@maskedNumber</div>
+                                    <div class="card-expiry mt-2 opacity-75">Срок: @pay.ExpiryDate</div>
+                                    <div class="card-actions mt-3 d-flex gap-2"><button type="button" class="btn btn-sm btn-light" style="border-radius:8px;" onclick="editPayment(@pay.PaymentId)"><i class="bi bi-pencil me-1"></i> Изменить</button><button type="button" class="btn btn-sm btn-light" style="border-radius:8px;" onclick="deletePayment(@pay.PaymentId)"><i class="bi bi-trash me-1"></i> Удалить</button></div>
+                                </div>
+                            }
+                        }
+                        else { <div class="empty-state"><i class="bi bi-credit-card-2-front"></i><p>У вас пока нет сохранённых карт</p></div> }
+                    </div>
+                    <div class="delivery-actions"><button type="button" class="btn btn-success px-4" style="border-radius:8px;" onclick="openNewPaymentModal()"><i class="bi bi-plus-circle me-1"></i> Добавить карту</button></div>
+                    <div class="modal fade" id="paymentModal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content" style="border-radius:12px;">
+                                <div class="modal-header bg-success text-white" style="border-radius:12px 12px 0 0;"><h5 class="modal-title w-100 text-center" id="paymentModalTitle">Добавление карты</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                                <div class="modal-body p-4">
+                                    <input type="hidden" id="editPaymentId" value="0">
+                                    <div class="mb-3"><label class="form-label fw-bold">Номер карты</label><input type="text" id="editCardNumber" class="form-control" style="border-radius:8px;" placeholder="1234 5678 9012 3456" maxlength="19"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold">CVV/CVC</label><input type="text" id="editCardCvv" class="form-control" style="border-radius:8px;" placeholder="***" maxlength="3" inputmode="numeric" pattern="\d*"></div>
+                                    <div class="mb-3"><label class="form-label fw-bold">Срок действия</label><input type="text" id="editExpiryDate" class="form-control" style="border-radius:8px;" placeholder="12/28" maxlength="5"></div>
+                                    <div class="form-check"><input class="form-check-input" type="checkbox" id="editPaymentIsDefault"><label class="form-check-label">Сделать основной картой</label></div>
+                                </div>
+                                <div class="modal-footer justify-content-center border-0 pb-4"><button type="button" class="btn btn-success px-4" style="border-radius:8px;" onclick="savePayment()">Сохранить</button><button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Отмена</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-addresses" class="tab-content @(activeTab == "addresses" ? "active-tab" : "")">
+                    <h5 class="section-title"><i class="bi bi-geo-alt me-2"></i> Адреса</h5>
+                    <div class="tabs-centered">
+                        <ul class="nav nav-pills" id="addressesSubTabs">
+                            <li class="nav-item"><a class="nav-link @(addressesSubTab == "delivery" ? "active" : "")" href="#" data-addresses-subtab="delivery"><i class="bi bi-truck me-1"></i> Доставка</a></li>
+                            <li class="nav-item"><a class="nav-link @(addressesSubTab == "pickup" ? "active" : "")" href="#" data-addresses-subtab="pickup"><i class="bi bi-shop me-1"></i> Самовывоз</a></li>
+                        </ul>
+                    </div>
+                    <div id="addressesSubContent">
+                        <div id="addresses-pickup" class="addresses-sub-content @(addressesSubTab == "pickup" ? "active" : "")">
+                            <div class="address-pills" id="addressPills">
+                                @foreach (var point in Model.AllPointPickups)
+                                {
+                                    <div class="address-pill @(Model.SelectedPickupPointId == point.PointPickupId ? "selected" : "")" data-point-id="@point.PointPickupId" data-address="@point.Address" onclick="selectPickupPoint(@point.PointPickupId, '@point.Address', this)">
+                                        <span class="pill-marker">📍</span><div><div class="pill-name">@point.PointName</div><div class="pill-address">@point.Address</div></div>
+                                    </div>
+                                }
+                            </div>
+                            <div class="search-wrapper"><div class="search-input-wrapper"><span class="search-icon"><i class="bi bi-search"></i></span><input type="text" id="mapSearchInput" placeholder="Введите адрес в Астрахани..."><button type="button" class="btn btn-sm btn-outline-success ms-2" style="border-radius:8px;" onclick="searchOnMap()">Найти</button></div><div class="search-suggestions" id="searchSuggestions"></div></div>
+                            <div id="yandexMap" style="width:100%; height:400px; border-radius:8px; margin-top:20px;"></div>
+                        </div>
+                        <div id="addresses-delivery" class="addresses-sub-content @(addressesSubTab == "delivery" ? "active" : "")">
+                            <div class="section-label text-center text-muted mb-3">Ваши адреса для доставки</div>
+                            <div style="max-width:560px; margin:0 auto;">
+                                @if (Model.UserAddresses != null && Model.UserAddresses.Any())
+                                {
+                                    foreach (var addr in Model.UserAddresses)
+                                    {
+                                        var cleanAddress = addr.Address ?? "";
+                                        var details = new List<string>();
+                                        if (!string.IsNullOrEmpty(addr.Entrance)) details.Add($"подъезд {addr.Entrance}");
+                                        if (addr.Floor.HasValue && addr.Floor > 0) details.Add($"этаж {addr.Floor}");
+                                        if (!string.IsNullOrEmpty(addr.Domofon)) details.Add($"домофон {addr.Domofon}");
+                                        if (!string.IsNullOrEmpty(addr.Apartment)) details.Add($"кв. {addr.Apartment}");
+                                        <div class="address-card @(addr.IsDefault ? "default" : "")" id="address-@addr.AddressDeliveryId" data-address-id="@addr.AddressDeliveryId" data-city="@addr.City" data-street="@cleanAddress" data-entrance="@addr.Entrance" data-floor="@addr.Floor" data-apartment="@addr.Apartment" data-domofon="@addr.Domofon" data-comment="@addr.Comment" data-isdefault="@addr.IsDefault.ToString().ToLower()">
+                                            <div class="default-badge"><input class="form-check-input default-checkbox" type="checkbox" data-address-id="@addr.AddressDeliveryId" @(addr.IsDefault ? "checked" : "") onchange="toggleDefaultAddress(this)" /><span>Основной</span></div>
+                                            <div class="address-card-top" onclick="selectSavedAddress(@addr.AddressDeliveryId, '@cleanAddress')"><span style="font-size:1.5rem;">📍</span><div class="address-info"><div class="fw-bold">@(string.IsNullOrEmpty(addr.City) ? "" : addr.City + ", ")@cleanAddress</div>@if (details.Any()){<div class="small text-muted">@string.Join(", ", details)</div>}</div></div>
+                                            @if (!string.IsNullOrEmpty(addr.Comment)){<div class="address-comment"><i class="bi bi-chat-dots me-1"></i> @addr.Comment</div>}
+                                            <div class="address-card-actions"><button type="button" class="btn btn-sm btn-outline-primary" style="border-radius:8px;" onclick="editAddress(@addr.AddressDeliveryId)"><i class="bi bi-pencil me-1"></i> Изменить</button><button type="button" class="btn btn-sm btn-outline-danger" style="border-radius:8px;" onclick="deleteAddress(@addr.AddressDeliveryId)"><i class="bi bi-trash me-1"></i> Удалить</button></div>
+                                        </div>
+                                    }
+                                }
+                                else { <div class="empty-state"><i class="bi bi-house-door"></i><p>У вас пока нет сохранённых адресов</p></div> }
+                            </div>
+                            <div class="delivery-actions"><button type="button" class="btn btn-outline-secondary" onclick="detectLocation()"><i class="bi bi-geo-alt me-1"></i> Определить местоположение</button><button type="button" class="btn btn-outline-primary" onclick="openNewAddressModal()"><i class="bi bi-plus-circle me-1"></i> Добавить адрес</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (role == 4)
+                {
+                    <div id="tab-statistics" class="tab-content @(activeTab == "statistics" ? "active-tab" : "")">
+                        <h5 class="section-title"><i class="bi bi-graph-up me-2"></i> Статистика</h5>
+                        <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+                            <button class="period-btn @(Model.StatPeriod == "day" ? "active" : "")" data-period="day">День</button>
+                            <button class="period-btn @(Model.StatPeriod == "week" ? "active" : "")" data-period="week">Неделя</button>
+                            <button class="period-btn @(Model.StatPeriod == "month" ? "active" : "")" data-period="month">Месяц</button>
+                            <button class="period-btn @(Model.StatPeriod == "year" ? "active" : "")" data-period="year">Год</button>
+                            <button class="period-btn @(Model.StatPeriod == "all" ? "active" : "")" data-period="all">Всё время</button>
+                        </div>
+                        <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="statMainTabs">
+                            <li class="nav-item"><a class="nav-link active sub-tab-btn" href="#" data-main-tab="orders"><i class="bi bi-cart-check me-1"></i> Заказы</a></li>
+                            <li class="nav-item"><a class="nav-link sub-tab-btn" href="#" data-main-tab="popular"><i class="bi bi-bar-chart-steps me-1"></i> Популярное</a></li>
+                        </ul>
+                        <div id="statOrdersContent" class="main-stat-content">
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4"><div class="stat-card p-3 text-center"><div class="stat-number">@Model.ExtendedOverview.TotalOrders</div><div class="stat-label">Всего заказов</div><div class="stat-divider"></div><div class="stat-number text-success">@Model.ExtendedOverview.TotalAmount.ToString("N0") ₽</div><div class="stat-label">Общая сумма</div></div></div>
+                                <div class="col-md-4"><div class="stat-card p-3 text-center"><div class="stat-number">@Model.ExtendedOverview.AvgCheck.ToString("N0") ₽</div><div class="stat-label">Средний чек</div><div class="stat-divider"></div><div class="stat-number">@Model.ExtendedOverview.AvgItemsPerOrder.ToString("F1")</div><div class="stat-label">Блюд в заказе</div></div></div>
+                                <div class="col-md-4"><div class="stat-card p-3 text-center"><div class="stat-number">@Model.ExtendedOverview.UniqueCustomers</div><div class="stat-label">Уникальных клиентов</div><div class="stat-divider"></div><div class="stat-number">@Model.ExtendedOverview.TotalItems</div><div class="stat-label">Всего блюд</div></div></div>
+                            </div>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6"><div class="stat-card p-3"><div class="fw-bold mb-2 text-center">Статусы заказов</div><div class="row text-center"><div class="col-3"><div class="stat-number text-success">@Model.ExtendedOverview.NewOrders</div><div class="stat-label">Новые</div></div><div class="col-3"><div class="stat-number text-primary">@Model.ExtendedOverview.ReadyOrders</div><div class="stat-label">Готовые</div></div><div class="col-3"><div class="stat-number text-info">@Model.ExtendedOverview.CompletedOrders</div><div class="stat-label">Завершённые</div></div><div class="col-3"><div class="stat-number text-danger">@Model.ExtendedOverview.CancelledOrders</div><div class="stat-label">Отменённые</div></div></div></div></div>
+                                <div class="col-md-6"><div class="stat-card p-3"><div class="fw-bold mb-2 text-center">Способ получения</div><div class="row text-center"><div class="col-6"><div class="stat-number text-success">@Model.ExtendedOverview.DeliveryOrders</div><div class="stat-label">Доставка</div></div><div class="col-6"><div class="stat-number text-primary">@Model.ExtendedOverview.PickupOrders</div><div class="stat-label">Самовывоз</div></div></div></div></div>
+                            </div>
+                            <div class="stat-card p-3"><div class="row text-center"><div class="col-6"><div class="stat-number">@Model.ExtendedOverview.MaxOrderAmount.ToString("N0") ₽</div><div class="stat-label">Максимальный заказ</div></div><div class="col-6"><div class="stat-number">@Model.ExtendedOverview.MinOrderAmount.ToString("N0") ₽</div><div class="stat-label">Минимальный заказ</div></div></div></div>
+                        </div>
+                        <div id="statPopularContent" class="main-stat-content" style="display: none;">
+                            <div class="text-center mb-3"><span class="info-badge"><i class="bi bi-info-circle me-1"></i> Аналитика популярности блюд по категориям и подкатегориям</span></div>
+                            <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="statSubTabs">
+                                <li class="nav-item"><a class="nav-link active sub-tab-btn" href="#" data-stat-tab="menu"><i class="bi bi-egg-fried me-1"></i> Меню</a></li>
+                                <li class="nav-item"><a class="nav-link sub-tab-btn" href="#" data-stat-tab="favorite"><i class="bi bi-heart-fill me-1"></i> Избранное</a></li>
+                                <li class="nav-item"><a class="nav-link sub-tab-btn" href="#" data-stat-tab="review"><i class="bi bi-star-fill me-1"></i> Отзывы</a></li>
+                            </ul>
+                            <div class="stat-card p-3"><div style="min-height: 550px;"><canvas id="statChart" style="max-height: 700px; width: 100%;"></canvas></div><div class="text-muted small text-center mt-3"><i class="bi bi-info-circle me-1"></i> При наведении на столбец отображаются топ-3 блюда в категории</div></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addressModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px;">
+                <div class="modal-header bg-success text-white" style="border-radius:12px 12px 0 0;"><h5 class="modal-title w-100 text-center" id="addressModalTitle">Добавление адреса</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="editAddressId" value="0">
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label fw-bold">Город / Населенный пункт</label><input type="text" id="editCity" class="form-control" style="border-radius:8px;" placeholder="Астрахань"></div>
+                        <div class="col-6"><label class="form-label fw-bold">Улица</label><input type="text" id="editStreet" class="form-control" style="border-radius:8px;" placeholder="ул. Ленина"></div>
+                        <div class="col-3"><label class="form-label fw-bold">Дом</label><input type="text" id="editHouse" class="form-control" style="border-radius:8px;" placeholder="15"></div>
+                        <div class="col-3"><label class="form-label fw-bold">Корпус</label><input type="text" id="editBuilding" class="form-control" style="border-radius:8px;" placeholder="1"></div>
+                        <div class="col-3"><label class="form-label fw-bold">Подъезд</label><input type="text" id="editEntrance" class="form-control" style="border-radius:8px;" placeholder="1"></div>
+                        <div class="col-3"><label class="form-label fw-bold">Этаж</label><input type="text" id="editFloor" class="form-control" style="border-radius:8px;" placeholder="1"></div>
+                        <div class="col-3"><label class="form-label fw-bold">Домофон</label><input type="text" id="editDomofon" class="form-control" style="border-radius:8px;" placeholder="11"></div>
+                        <div class="col-3"><label class="form-label fw-bold">Квартира</label><input type="text" id="editApartment" class="form-control" style="border-radius:8px;" placeholder="11"></div>
+                        <div class="col-12"><label class="form-label fw-bold">Комментарий курьеру</label><textarea id="editComment" class="form-control" style="border-radius:8px;" rows="2" placeholder="Позвонить за 10 минут..."></textarea></div>
+                        <div class="col-12"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsDefault"><label class="form-check-label">Сделать основным адресом</label></div></div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pb-4"><button type="button" class="btn btn-success px-4" style="border-radius:8px;" onclick="saveAddress()">Сохранить</button><button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Отмена</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=4530ebd5-c3bd-4620-9f04-530dc4d2f48b&lang=ru_RU"></script>
+    <script>
+        let selectedCashbackIds = [];
+        const MAX_CATEGORIES = 3;
+        let selectedPickupId = @(Model.SelectedPickupPointId ?? 0);
+        let yandexMap = null, searchPlacemark = null;
+        let allMapLocations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MapLocations));
+
+        function getToken() { return document.getElementById('requestVerificationToken')?.value || document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''; }
+
+        function showNotification(message, type) {
+            var n = document.createElement('div');
+            n.className = 'alert alert-' + (type === 'success' ? 'success' : 'danger') + ' position-fixed top-0 end-0 m-3';
+            n.style.zIndex = '9999';
+            n.style.borderRadius = '12px';
+            n.style.fontWeight = '600';
+            n.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill') + ' me-2"></i> ' + message;
+            document.body.appendChild(n);
+            setTimeout(function() { n.remove(); }, 3000);
+        }
+
+        function handleCvvProfileKeyDown(e) {
+            var input = e.target;
+            var key = e.key;
+            var currentRaw = input.getAttribute('data-raw-value') || '';
+            var start = input.selectionStart;
+            var end = input.selectionEnd;
+            var hasSelection = (start !== end);
+            if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Tab' || key === 'Home' || key === 'End') { return; }
+            if (key === 'Backspace') {
+                e.preventDefault();
+                var newRaw = currentRaw;
+                if (hasSelection) { newRaw = currentRaw.slice(0, start) + currentRaw.slice(end); } else if (start > 0) { newRaw = currentRaw.slice(0, start - 1) + currentRaw.slice(start); }
+                input.setAttribute('data-raw-value', newRaw);
+                var masked = ''; for (var i = 0; i < newRaw.length; i++) { masked += '*'; }
+                input.value = masked;
+                var newPos = hasSelection ? start : Math.max(0, start - 1);
+                input.setSelectionRange(newPos, newPos);
+                return;
+            }
+            if (key === 'Delete') {
+                e.preventDefault();
+                var newRaw = currentRaw;
+                if (hasSelection) { newRaw = currentRaw.slice(0, start) + currentRaw.slice(end); } else if (start < currentRaw.length) { newRaw = currentRaw.slice(0, start) + currentRaw.slice(start + 1); }
+                input.setAttribute('data-raw-value', newRaw);
+                var masked = ''; for (var i = 0; i < newRaw.length; i++) { masked += '*'; }
+                input.value = masked;
+                input.setSelectionRange(start, start);
+                return;
+            }
+            if (key.length === 1 && /[0-9]/.test(key)) {
+                e.preventDefault();
+                var newRaw = currentRaw;
+                if (hasSelection) { newRaw = currentRaw.slice(0, start) + key + currentRaw.slice(end); } else { newRaw = currentRaw.slice(0, start) + key + currentRaw.slice(start); }
+                if (newRaw.length > 3) { newRaw = newRaw.substring(0, 3); }
+                input.setAttribute('data-raw-value', newRaw);
+                var masked = ''; for (var i = 0; i < newRaw.length; i++) { masked += '*'; }
+                input.value = masked;
+                var newPos = hasSelection ? start + 1 : start + 1;
+                if (newPos > masked.length) newPos = masked.length;
+                input.setSelectionRange(newPos, newPos);
+                return;
+            }
+            if (key !== 'Tab' && key !== 'Shift' && key !== 'Control' && key !== 'Alt' && key !== 'Meta') { e.preventDefault(); }
+        }
+
+        function applyCvvMask(input, rawValue) {
+            input.setAttribute('data-raw-value', rawValue || '');
+            var masked = ''; var raw = rawValue || '';
+            for (var i = 0; i < raw.length; i++) { masked += '*'; }
+            input.value = masked;
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active-tab'));
+            const activeTab = document.getElementById('tab-' + tabId);
+            if (activeTab) activeTab.classList.add('active-tab');
+            document.querySelectorAll('.sidebar-link[data-tab]').forEach(link => {
+                if (link.getAttribute('data-tab') === tabId) link.classList.add('active');
+                else link.classList.remove('active');
+            });
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', tabId);
+            if (tabId === 'userbonuses') {
+                const activeBonusSubTab = document.querySelector('#bonusSubTabs .nav-link.active')?.getAttribute('data-bonus-subtab') || 'bonus';
+                url.searchParams.set('bonusSubTab', activeBonusSubTab);
+                if (activeBonusSubTab === 'bonus') {
+                    const activeCashbackSubTab = document.querySelector('#cashbackSubTabs .nav-link.active')?.getAttribute('data-cashback-subtab') || 'regular';
+                    url.searchParams.set('cashbackSubTab', activeCashbackSubTab);
+                }
+            } else if (tabId === 'addresses') {
+                const activeAddressesSubTab = document.querySelector('#addressesSubTabs .nav-link.active')?.getAttribute('data-addresses-subtab') || 'delivery';
+                url.searchParams.set('addressesSubTab', activeAddressesSubTab);
+                if (activeAddressesSubTab === 'pickup') setTimeout(() => { if (yandexMap) yandexMap.container.fitToViewport(); }, 200);
+            } else if (tabId === 'statistics') {
+                const activeMainTab = document.querySelector('#statMainTabs .nav-link.active')?.getAttribute('data-main-tab') || 'orders';
+                const activeStatTab = document.querySelector('#statSubTabs .nav-link.active')?.getAttribute('data-stat-tab') || 'menu';
+                const activePeriod = document.querySelector('.period-btn.active')?.getAttribute('data-period') || 'all';
+                url.searchParams.set('mainTab', activeMainTab);
+                url.searchParams.set('statTab', activeStatTab);
+                url.searchParams.set('period', activePeriod);
+            }
+            window.history.pushState({}, '', url);
+        }
+
+        function switchMainStatTab(tabId) {
+            if (tabId === 'orders') {
+                document.getElementById('statOrdersContent').style.display = 'block';
+                document.getElementById('statPopularContent').style.display = 'none';
+                document.querySelector('#statMainTabs .nav-link[data-main-tab="orders"]').classList.add('active');
+                document.querySelector('#statMainTabs .nav-link[data-main-tab="popular"]').classList.remove('active');
+            } else {
+                document.getElementById('statOrdersContent').style.display = 'none';
+                document.getElementById('statPopularContent').style.display = 'block';
+                document.querySelector('#statMainTabs .nav-link[data-main-tab="popular"]').classList.add('active');
+                document.querySelector('#statMainTabs .nav-link[data-main-tab="orders"]').classList.remove('active');
+            }
+            const url = new URL(window.location.href);
+            url.searchParams.set('mainTab', tabId);
+            window.history.pushState({}, '', url);
+        }
+
+        function switchBonusSubTab(subTabId) {
+            document.querySelectorAll('#bonusSubContent > div').forEach(c => c.classList.remove('active'));
+            document.getElementById('bonus-' + subTabId)?.classList.add('active');
+            document.querySelectorAll('#bonusSubTabs .nav-link').forEach(link => {
+                if (link.getAttribute('data-bonus-subtab') === subTabId) link.classList.add('active');
+                else link.classList.remove('active');
+            });
+            const url = new URL(window.location.href);
+            url.searchParams.set('bonusSubTab', subTabId);
+            if (subTabId !== 'bonus') url.searchParams.delete('cashbackSubTab');
+            window.history.pushState({}, '', url);
+        }
+
+        function switchCashbackSubTab(subTabId) {
+            document.querySelectorAll('#cashbackSubContent > div').forEach(c => c.classList.remove('active'));
+            document.getElementById('cashback-' + subTabId)?.classList.add('active');
+            document.querySelectorAll('#cashbackSubTabs .nav-link').forEach(link => {
+                if (link.getAttribute('data-cashback-subtab') === subTabId) link.classList.add('active');
+                else link.classList.remove('active');
+            });
+            const url = new URL(window.location.href);
+            url.searchParams.set('cashbackSubTab', subTabId);
+            window.history.pushState({}, '', url);
+        }
+
+        function switchAddressesSubTab(subTabId) {
+            document.querySelectorAll('#addressesSubContent > div').forEach(c => c.classList.remove('active'));
+            document.getElementById('addresses-' + subTabId)?.classList.add('active');
+            document.querySelectorAll('#addressesSubTabs .nav-link').forEach(link => {
+                if (link.getAttribute('data-addresses-subtab') === subTabId) link.classList.add('active');
+                else link.classList.remove('active');
+            });
+            const url = new URL(window.location.href);
+            url.searchParams.set('addressesSubTab', subTabId);
+            window.history.pushState({}, '', url);
+            if (subTabId === 'pickup') setTimeout(() => { if (yandexMap) yandexMap.container.fitToViewport(); }, 200);
+        }
+
+        let statChart = null;
+
+        async function loadStatistics(period, tab) {
+            try {
+                const response = await fetch(`/Profile/MyProfile?handler=Statistics&period=${period}&tab=${tab}`);
+                const data = await response.json();
+                renderVerticalChart(data, tab);
+            } catch (e) {
+                console.error('Ошибка загрузки статистики:', e);
+                const canvas = document.getElementById('statChart');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = '14px Inter';
+                    ctx.fillStyle = '#6c757d';
+                    ctx.fillText('Нет данных за выбранный период', 50, 200);
+                }
+            }
+        }
+
+        function renderVerticalChart(data, tab) {
+            const ctx = document.getElementById('statChart').getContext('2d');
+            if (statChart) statChart.destroy();
+            if (!data || data.length === 0) {
+                ctx.clearRect(0, 0, 800, 400);
+                ctx.font = '14px Inter';
+                ctx.fillStyle = '#6c757d';
+                ctx.fillText('Нет данных за выбранный период', 50, 200);
+                return;
+            }
+            const labels = [];
+            const chartData = [];
+            const tooltipDetails = [];
+            data.forEach(cat => {
+                let subText = cat.subcategories.map(s => `${s.subcategoryName}: ${s.value.toFixed(1)}`).join(' · ');
+                if (subText.length > 40) subText = subText.substring(0, 37) + '...';
+                labels.push(`${cat.categoryName}\n${subText}`);
+                let totalValue = cat.topDishes.reduce((sum, d) => sum + d.value, 0);
+                chartData.push(totalValue);
+                let dishesText = cat.topDishes.map(d => `${d.dishName}: ${d.value.toFixed(1)}`).join('\n');
+                tooltipDetails.push(dishesText);
+            });
+            const labelText = tab === 'menu' ? 'Количество заказов (шт.)' : (tab === 'favorite' ? 'Количество добавлений в избранное' : 'Средний рейтинг (1-5)');
+            statChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: labelText, data: chartData, backgroundColor: 'rgba(43, 140, 74, 0.8)', borderColor: '#2b8c4a', borderWidth: 1, borderRadius: 6, barPercentage: 0.65, categoryPercentage: 0.8, hoverBackgroundColor: 'rgba(43, 140, 74, 0.95)' }] },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: { tooltip: { callbacks: { label: function(context) { let val = context.raw; let idx = context.dataIndex; let dishes = tooltipDetails[idx] || ''; return `${labelText}: ${val.toFixed(1)}\n\nТоп-3 блюда:\n${dishes}`; } } }, legend: { position: 'top', labels: { font: { size: 11, weight: 'bold' } } } },
+                    scales: { x: { ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45, callback: function(val) { let label = labels[val] || ''; return label.split('\n')[0]; } }, grid: { display: false } }, y: { title: { display: true, text: labelText, font: { size: 11, weight: 'bold' } }, ticks: { font: { size: 10 } }, grid: { display: true, color: '#e9ecef' }, beginAtZero: true } }
+                }
+            });
+        }
+
+        function initMap() {
+            const mapContainer = document.getElementById('yandexMap');
+            if (!mapContainer) return;
+            if (typeof ymaps === 'undefined') { setTimeout(initMap, 500); return; }
+            ymaps.ready(() => {
+                try {
+                    yandexMap = new ymaps.Map('yandexMap', { center: [46.3497, 48.0408], zoom: 13, controls: ['zoomControl', 'fullscreenControl'], suppressMapOpenBlock: true });
+                    if (allMapLocations && allMapLocations.length) {
+                        allMapLocations.forEach(loc => {
+                            if (loc.latitude && loc.longitude) {
+                                new ymaps.Placemark([loc.latitude, loc.longitude], { balloonContentHeader: '<strong>' + loc.name + '</strong>', balloonContentBody: loc.address, hintContent: loc.name }, { preset: 'islands#redIcon' }).addTo(yandexMap);
+                            }
+                        });
+                    }
+                } catch(e) { console.error('Map error:', e); }
+            });
+        }
+
+        function searchOnMap() {
+            var searchText = document.getElementById('mapSearchInput')?.value;
+            if (!searchText || !yandexMap) return;
+            if (searchPlacemark) yandexMap.geoObjects.remove(searchPlacemark);
+            ymaps.geocode(searchText + ', Астрахань', { results: 1 }).then(res => {
+                const geo = res.geoObjects.get(0);
+                if (geo) {
+                    const coords = geo.geometry.getCoordinates();
+                    const address = geo.getAddressLine();
+                    searchPlacemark = new ymaps.Placemark(coords, { balloonContentBody: address }, { preset: 'islands#blueIcon' });
+                    yandexMap.geoObjects.add(searchPlacemark);
+                    yandexMap.setCenter(coords, 15);
+                    searchPlacemark.balloon.open();
+                }
+            });
+        }
+
+        let debounceTimer;
+        const searchInputMap = document.getElementById('mapSearchInput');
+        if (searchInputMap) {
+            searchInputMap.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const q = this.value.trim();
+                if (q.length < 2) { hideSuggestions(); return; }
+                debounceTimer = setTimeout(() => {
+                    ymaps.geocode('Астрахань, ' + q, { results: 5 }).then(res => {
+                        const items = res.geoObjects.toArray();
+                        const cont = document.getElementById('searchSuggestions');
+                        if (!items.length) { hideSuggestions(); return; }
+                        let html = '';
+                        items.forEach(i => {
+                            const a = i.getAddressLine();
+                            html += '<div class="suggestion-item" onclick="selectSuggestion(\'' + a.replace(/'/g, "\\'") + '\')">📍 ' + a + '</div>';
+                        });
+                        cont.innerHTML = html;
+                        cont.classList.add('show');
+                    });
+                }, 300);
+            });
+            searchInputMap.addEventListener('keydown', e => { if (e.key === 'Enter') searchOnMap(); });
+            document.addEventListener('click', e => { if (!e.target.closest('.search-wrapper')) hideSuggestions(); });
+        }
+
+        function selectSuggestion(a) {
+            const si = document.getElementById('mapSearchInput');
+            if (si) si.value = a;
+            if (yandexMap) {
+                ymaps.geocode(a, { results: 1 }).then(res => {
+                    const geo = res.geoObjects.get(0);
+                    if (geo && yandexMap) {
+                        const coords = geo.geometry.getCoordinates();
+                        yandexMap.setCenter(coords, 15);
+                        if (searchPlacemark) yandexMap.geoObjects.remove(searchPlacemark);
+                        searchPlacemark = new ymaps.Placemark(coords, { balloonContentBody: a }, { preset: 'islands#blueIcon' });
+                        yandexMap.geoObjects.add(searchPlacemark);
+                        searchPlacemark.balloon.open();
+                    }
+                });
+            }
+            hideSuggestions();
+        }
+
+        function hideSuggestions() { const c = document.getElementById('searchSuggestions'); if (c) { c.classList.remove('show'); c.innerHTML = ''; } }
+
+        async function selectPickupPoint(pointId, address, element) {
+            try {
+                const resp = await fetch(window.location.pathname + '?handler=TogglePickupPoint', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                    body: JSON.stringify({ pointPickupId: pointId })
+                });
+                const result = await resp.json();
+                if (result.success) {
+                    if (result.selected) {
+                        document.querySelectorAll('.address-pill').forEach(p => p.classList.remove('selected'));
+                        element.classList.add('selected');
+                        selectedPickupId = pointId;
+                    } else {
+                        element.classList.remove('selected');
+                        selectedPickupId = 0;
+                    }
+                }
+            } catch(e) { console.error(e); }
+            if (yandexMap) {
+                ymaps.geocode(address, { results: 1 }).then(res => {
+                    const geo = res.geoObjects.get(0);
+                    if (geo) yandexMap.setCenter(geo.geometry.getCoordinates(), 15);
+                });
+            }
+        }
+
+        function initCashbackCategories() {
+            try { selectedCashbackIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedCategoryIds)); } catch(e) { selectedCashbackIds = [1,3,11]; }
+            updateCategoryCheckboxesUI();
+        }
+
+        function updateCategoryCheckboxesUI() {
+            const selectedCount = selectedCashbackIds.length;
+            const countDisplay = document.getElementById('selectedCountDisplay');
+            if (countDisplay) countDisplay.textContent = selectedCount;
+            const container = document.getElementById('categoriesCheckboxContainer');
+            if (!container) return;
+            container.querySelectorAll('.category-check-card').forEach(card => {
+                const catId = parseInt(card.dataset.categoryId);
+                const isSelected = selectedCashbackIds.includes(catId);
+                const isDisabled = selectedCount >= MAX_CATEGORIES && !isSelected;
+                const chk = card.querySelector('input');
+                if (chk) { chk.checked = isSelected; chk.disabled = isDisabled; }
+                if (isSelected) card.classList.add('selected');
+                else card.classList.remove('selected');
+                card.style.opacity = isDisabled ? '0.45' : '1';
+            });
+        }
+
+        function toggleCategoryCheckbox(categoryId, cardElement) {
+            const chk = cardElement.querySelector('input');
+            if (!chk) return;
+            if (chk.checked) {
+                selectedCashbackIds = selectedCashbackIds.filter(id => id !== categoryId);
+            } else {
+                if (selectedCashbackIds.length >= MAX_CATEGORIES) { alert('Можно выбрать максимум 3 категории!'); return; }
+                selectedCashbackIds.push(categoryId);
+            }
+            updateCategoryCheckboxesUI();
+        }
+
+        function openNewAddressModal() {
+            document.getElementById('addressModalTitle').textContent = 'Добавление адреса';
+            document.getElementById('editAddressId').value = '0';
+            document.getElementById('editCity').value = '';
+            document.getElementById('editStreet').value = '';
+            document.getElementById('editHouse').value = '';
+            document.getElementById('editBuilding').value = '';
+            document.getElementById('editEntrance').value = '';
+            document.getElementById('editFloor').value = '';
+            document.getElementById('editDomofon').value = '';
+            document.getElementById('editApartment').value = '';
+            document.getElementById('editComment').value = '';
+            document.getElementById('editIsDefault').checked = false;
+            new bootstrap.Modal(document.getElementById('addressModal')).show();
+        }
+
+        function editAddress(id) {
+            document.getElementById('addressModalTitle').textContent = 'Изменение адреса';
+            document.getElementById('editAddressId').value = id;
+            const card = document.getElementById('address-' + id);
+            if (card) {
+                let city = card.getAttribute('data-city') || '';
+                let full = card.getAttribute('data-street') || '';
+                let entrance = card.getAttribute('data-entrance') || '';
+                let floor = card.getAttribute('data-floor') || '';
+                let apartment = card.getAttribute('data-apartment') || '';
+                let domofon = card.getAttribute('data-domofon') || '';
+                let comment = card.getAttribute('data-comment') || '';
+                let isDefault = card.getAttribute('data-isdefault') === 'true';
+                let street = full, house = '', building = '';
+                if (full.includes(', д.')) {
+                    let parts = full.split(', д.');
+                    street = parts[0];
+                    house = parts[1]?.split(', к.')[0] || '';
+                    building = parts[1]?.split(', к.')[1] || '';
+                }
+                document.getElementById('editCity').value = city;
+                document.getElementById('editStreet').value = street;
+                document.getElementById('editHouse').value = house;
+                document.getElementById('editBuilding').value = building;
+                document.getElementById('editEntrance').value = entrance;
+                document.getElementById('editFloor').value = floor;
+                document.getElementById('editApartment').value = apartment;
+                document.getElementById('editDomofon').value = domofon;
+                document.getElementById('editComment').value = comment;
+                document.getElementById('editIsDefault').checked = isDefault;
+            }
+            new bootstrap.Modal(document.getElementById('addressModal')).show();
+        }
+
+        async function saveAddress() {
+            const city = document.getElementById('editCity').value.trim();
+            const street = document.getElementById('editStreet').value.trim();
+            const house = document.getElementById('editHouse').value.trim();
+            if (!street || !house) { alert('Введите улицу и дом'); return; }
+            if (!city) { alert('Введите город'); return; }
+            let building = document.getElementById('editBuilding').value.trim();
+            let full = street + ', д. ' + house + (building ? ', к. ' + building : '');
+            const data = {
+                addressId: parseInt(document.getElementById('editAddressId').value) || null,
+                city: city, street: full,
+                apartment: document.getElementById('editApartment').value.trim() || null,
+                entrance: document.getElementById('editEntrance').value.trim() || null,
+                floor: parseInt(document.getElementById('editFloor').value) || null,
+                domofon: document.getElementById('editDomofon').value.trim() || null,
+                comment: document.getElementById('editComment').value.trim() || null,
+                isDefault: document.getElementById('editIsDefault').checked
+            };
+            const resp = await fetch(window.location.pathname + '?handler=SaveDeliveryAddress', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                body: JSON.stringify(data)
+            });
+            const result = await resp.json();
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('addressModal')).hide();
+                location.reload();
+            } else alert(result.message || 'Ошибка');
+        }
+
+        async function deleteAddress(id) {
+            if (!confirm('Удалить адрес?')) return;
+            await fetch(window.location.pathname + '?handler=DeleteDeliveryAddress&id=' + id, { method: 'POST', headers: { 'X-CSRF-TOKEN': getToken() } });
+            location.reload();
+        }
+
+        async function toggleDefaultAddress(checkbox) {
+            const id = checkbox.dataset.addressId, checked = checkbox.checked;
+            await fetch(window.location.pathname + '?handler=ToggleDefaultAddress', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                body: JSON.stringify({ addressId: parseInt(id), isDefault: checked })
+            });
+            if (checked) document.querySelectorAll('.default-checkbox').forEach(cb => { if (cb !== checkbox && cb.checked) cb.checked = false; });
+            location.reload();
+        }
+
+        function selectSavedAddress(id, address) { console.log('Выбран адрес:', id, address); }
+
+        function detectLocation() {
+            if (!navigator.geolocation) { alert('Геолокация не поддерживается'); return; }
+            navigator.geolocation.getCurrentPosition(pos => {
+                fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=4530ebd5-c3bd-4620-9f04-530dc4d2f48b&geocode=${pos.coords.longitude},${pos.coords.latitude}&format=json`)
+                    .then(response => response.json())
+                    .then(data => {
+                        var address = data.response.GeoObjectCollection.featureMember[0]?.GeoObject?.metaDataProperty?.GeocoderMetaData?.text;
+                        if (address) {
+                            openNewAddressModal();
+                            setTimeout(() => {
+                                var parts = address.split(', ');
+                                var city = '', street = '', house = '', building = '';
+                                for (var i = 0; i < parts.length; i++) {
+                                    var part = parts[i];
+                                    if (part.includes('Астрахань') || part.includes('Москва') || (i === 1 && !part.match(/\d/))) city = part;
+                                    if (part.includes('улица') || part.includes('проспект') || part.includes('переулок')) street = part;
+                                    var houseMatch = part.match(/дом\s*(\d+[а-яА-Я]?)/i);
+                                    if (houseMatch) house = houseMatch[1];
+                                    var buildingMatch = part.match(/корпус\s*(\d+[а-яА-Я]?)/i);
+                                    if (buildingMatch) building = buildingMatch[1];
+                                }
+                                if (city) document.getElementById('editCity').value = city;
+                                if (street) document.getElementById('editStreet').value = street;
+                                if (house) document.getElementById('editHouse').value = house;
+                                if (building) document.getElementById('editBuilding').value = building;
+                                showNotification('Адрес определён, проверьте и сохраните', 'success');
+                            }, 500);
+                        } else alert('Не удалось определить адрес');
+                    }).catch(() => alert('Ошибка геокодирования'));
+            }, () => alert('Не удалось определить местоположение'));
+        }
+
+        function maskCardNumber(i) {
+            let v = i.value.replace(/\D/g, '').substring(0,16);
+            let f = '';
+            for(let j=0;j<v.length;j++){ if(j>0 && j%4===0) f+=' '; f+=v[j]; }
+            i.value=f;
+        }
+        
+        function maskExpiryDate(i) {
+            let v = i.value.replace(/\D/g,'').substring(0,4);
+            if(v.length>=2) v=v.substring(0,2)+'/'+v.substring(2);
+            i.value=v;
+        }
+        
+        function openNewPaymentModal() {
+            document.getElementById('editPaymentId').value = '0';
+            document.getElementById('editCardNumber').value = '';
+            var cvvInput = document.getElementById('editCardCvv');
+            applyCvvMask(cvvInput, '');
+            document.getElementById('editExpiryDate').value = '';
+            document.getElementById('editPaymentIsDefault').checked = false;
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+        
+        function editPayment(id) {
+            document.getElementById('editPaymentId').value = id;
+            const c = document.getElementById('payment-' + id);
+            if (c) {
+                document.getElementById('editCardNumber').value = c.getAttribute('data-full-number')?.match(/.{1,4}/g)?.join(' ') || '';
+                var rawCvv = c.getAttribute('data-cvv') || '';
+                var cvvInput = document.getElementById('editCardCvv');
+                applyCvvMask(cvvInput, rawCvv);
+                document.getElementById('editExpiryDate').value = c.getAttribute('data-expiry') || '';
+                document.getElementById('editPaymentIsDefault').checked = c.classList.contains('default');
+            }
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+        
+        async function savePayment() {
+            let cn = document.getElementById('editCardNumber').value.replace(/\s/g, '');
+            let cv = document.getElementById('editCardCvv').getAttribute('data-raw-value') || '';
+            let ex = document.getElementById('editExpiryDate').value.trim();
+            if (!cn || cn.length < 16) { alert('Введите полный номер карты (16 цифр)'); return; }
+            if (!cv || cv.length !== 3) { alert('Введите CVV (3 цифры)'); return; }
+            if (!ex || ex.length < 5) { alert('Введите срок действия'); return; }
+            const data = { paymentId: parseInt(document.getElementById('editPaymentId').value) || null, cardNumber: cn, cardHolder: cv, expiryDate: ex, isDefault: document.getElementById('editPaymentIsDefault').checked };
+            const r = await fetch(window.location.pathname + '?handler=SavePayment', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                body: JSON.stringify(data)
+            });
+            const res = await r.json();
+            if (res.success) { bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide(); location.reload(); }
+            else alert(res.message || 'Ошибка');
+        }
+        
+        async function deletePayment(id) {
+            if (confirm('Удалить карту?')) {
+                await fetch(window.location.pathname + '?handler=DeletePayment&id=' + id, { method: 'POST', headers: { 'X-CSRF-TOKEN': getToken() } });
+                location.reload();
+            }
+        }
+        
+        async function toggleDefaultPayment(checkbox) {
+            const id = checkbox.dataset.paymentId, checked = checkbox.checked;
+            await fetch(window.location.pathname + '?handler=ToggleDefaultPayment', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                body: JSON.stringify({ paymentId: parseInt(id), isDefault: checked })
+            });
+            if (checked) document.querySelectorAll('.default-payment-checkbox').forEach(cb => { if (cb !== checkbox && cb.checked) cb.checked = false; });
+            location.reload();
+        }
+
+        document.querySelectorAll('.copy-promo-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const code = this.getAttribute('data-code');
+                if (code) {
+                    navigator.clipboard.writeText(code);
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="bi bi-check-lg"></i> Скопирован!';
+                    setTimeout(() => { this.innerHTML = originalText; }, 2000);
+                }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCashbackCategories();
+            initMap();
+            document.querySelectorAll('.sidebar-link[data-tab]').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); switchTab(link.getAttribute('data-tab')); }); });
+            document.querySelectorAll('#bonusSubTabs .nav-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const sub = link.getAttribute('data-bonus-subtab'); if(sub) switchBonusSubTab(sub); }); });
+            document.querySelectorAll('#cashbackSubTabs .nav-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const sub = link.getAttribute('data-cashback-subtab'); if(sub) switchCashbackSubTab(sub); }); });
+            document.querySelectorAll('#addressesSubTabs .nav-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const sub = link.getAttribute('data-addresses-subtab'); if(sub) switchAddressesSubTab(sub); }); });
+            document.querySelectorAll('#statMainTabs .nav-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const tab = link.getAttribute('data-main-tab'); switchMainStatTab(tab); }); });
+            document.querySelectorAll('#statSubTabs .nav-link').forEach(link => { link.addEventListener('click', (e) => { e.preventDefault(); const tab = link.getAttribute('data-stat-tab'); const activePeriod = document.querySelector('.period-btn.active')?.getAttribute('data-period') || 'all'; document.querySelectorAll('#statSubTabs .nav-link').forEach(l => l.classList.remove('active')); link.classList.add('active'); loadStatistics(activePeriod, tab); }); });
+            document.querySelectorAll('.period-btn').forEach(btn => { btn.addEventListener('click', (e) => { e.preventDefault(); const period = btn.getAttribute('data-period'); const activeStatTab = document.querySelector('#statSubTabs .nav-link.active')?.getAttribute('data-stat-tab') || 'menu'; document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); if (document.getElementById('statPopularContent').style.display !== 'none') { loadStatistics(period, activeStatTab); } }); });
+            const cardNumberInput = document.getElementById('editCardNumber'); if (cardNumberInput) cardNumberInput.addEventListener('input', function() { maskCardNumber(this); });
+            const expiryDateInput = document.getElementById('editExpiryDate'); if (expiryDateInput) expiryDateInput.addEventListener('input', function() { maskExpiryDate(this); });
+            if (document.querySelector('#addresses-pickup.active') && document.getElementById('yandexMap')) setTimeout(() => { if (yandexMap) yandexMap.container.fitToViewport(); }, 300);
+            var cvvInput = document.getElementById('editCardCvv');
+            if (cvvInput) { cvvInput.setAttribute('data-raw-value', ''); cvvInput.addEventListener('keydown', handleCvvProfileKeyDown); cvvInput.addEventListener('paste', function(e) { e.preventDefault(); var pastedText = (e.clipboardData || window.clipboardData).getData('text'); var digitsOnly = pastedText.replace(/\D/g, ''); if (digitsOnly.length > 3) digitsOnly = digitsOnly.substring(0, 3); applyCvvMask(this, digitsOnly); }); }
+        });
+    </script>
+</body>
+</html>

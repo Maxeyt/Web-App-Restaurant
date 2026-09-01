@@ -1,0 +1,111 @@
+﻿@page
+@model MaxFood.Pages.Subcategory.CreateModel
+@{
+    ViewData["Title"] = "Создание подкатегории";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MaxFood</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif !important; letter-spacing: -0.2px; }
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #e8f0ea 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .form-container { max-width: 550px; width: 100%; margin: 0 auto; }
+        .form-card { background: white; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04); overflow: hidden; }
+        .form-header { background: linear-gradient(135deg, #2b8c4a 0%, #1e6b38 100%); padding: 28px 30px; text-align: center; }
+        .form-header h3 { margin: 0; font-size: 1.6rem; font-weight: 700; color: white; letter-spacing: -0.3px; }
+        .form-header p { margin: 8px 0 0; font-size: 0.8rem; color: rgba(255,255,255,0.85); }
+        .form-header i { font-size: 2rem; margin-bottom: 8px; display: block; }
+        .form-body { padding: 30px; }
+        .form-label { font-weight: 600; font-size: 0.8rem; margin-bottom: 6px; color: #2c3e2f; }
+        .form-control, .form-select { border-radius: 12px; border: 1.5px solid #e9ecef; padding: 10px 14px; font-size: 0.85rem; transition: all 0.2s; }
+        .form-control:focus, .form-select:focus { border-color: #2b8c4a; box-shadow: 0 0 0 3px rgba(43,140,74,0.1); outline: none; }
+        .form-check-input:checked { background-color: #2b8c4a; border-color: #2b8c4a; }
+        .btn-save { background: linear-gradient(135deg, #2b8c4a 0%, #236f3d 100%); border: none; border-radius: 12px; padding: 12px 28px; font-weight: 600; font-size: 0.9rem; color: white; transition: all 0.2s; }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(43,140,74,0.3); }
+        .btn-cancel { background: #f8f9fa; border: 1.5px solid #dee2e6; border-radius: 12px; padding: 12px 28px; font-weight: 600; font-size: 0.9rem; color: #6c757d; transition: all 0.2s; }
+        .btn-cancel:hover { background: #e9ecef; border-color: #adb5bd; }
+        .text-danger { font-size: 0.7rem; margin-top: 4px; }
+        .category-badge { display: inline-block; padding: 4px 10px; background: #f0fdf4; border-radius: 20px; font-size: 0.7rem; color: #2b8c4a; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <i class="bi bi-folder2-open"></i>
+                <h3>@(Model.Subcategory?.SubcategoryId > 0 ? "Редактирование подкатегории" : "Новая подкатегория")</h3>
+                <p>@(Model.Subcategory?.SubcategoryId > 0 ? "Измените данные подкатегории" : "Добавьте подкатегорию к существующей категории")</p>
+            </div>
+            <div class="form-body">
+                <form method="post" id="subcategoryForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Subcategory.SubcategoryId" />
+
+                    <div class="mb-3">
+                        <label asp-for="Subcategory.CategoryId" class="form-label">
+                            <i class="bi bi-folder me-1"></i> Родительская категория <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="Subcategory.CategoryId" class="form-select" asp-items="ViewBag.Categories">
+                            <option value="">-- Выберите категорию --</option>
+                        </select>
+                        <span asp-validation-for="Subcategory.CategoryId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Subcategory.SubcategoryName" class="form-label">
+                            <i class="bi bi-tag me-1"></i> Название подкатегории <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Subcategory.SubcategoryName" class="form-control" placeholder="Например: Классические роллы, Острые бургеры" />
+                        <span asp-validation-for="Subcategory.SubcategoryName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Subcategory.DisplayOrder" class="form-label">
+                            <i class="bi bi-sort-numeric-down me-1"></i> Порядок отображения
+                        </label>
+                        <input asp-for="Subcategory.DisplayOrder" class="form-control" type="number" placeholder="1, 2, 3..." />
+                        <small class="text-muted">Чем меньше число, тем выше в списке</small>
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        <input asp-for="Subcategory.IsActive" class="form-check-input" />
+                        <label asp-for="Subcategory.IsActive" class="form-check-label">
+                            <i class="bi bi-check-circle me-1"></i> Подкатегория активна
+                        </label>
+                        <small class="text-muted d-block">Неактивные подкатегории не отображаются на сайте</small>
+                    </div>
+
+                    <hr />
+
+                    <div class="d-flex gap-3 justify-content-end">
+                        <button type="button" class="btn-cancel" onclick="closeModal()">
+                            <i class="bi bi-x-lg me-1"></i> Отмена
+                        </button>
+                        <button type="submit" class="btn-save">
+                            <i class="bi bi-check-lg me-1"></i> @(Model.Subcategory?.SubcategoryId > 0 ? "Сохранить" : "Создать")
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function closeModal() {
+            if (window.parent && window.parent.closeDishModal) {
+                window.parent.closeDishModal();
+            } else {
+                window.location.href = '/Subcategory/Index';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+﻿@page
+@model MaxFood.Pages.Cart.MyCartModel
+@{
+    ViewData["Title"] = "Корзина";
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Максимум еды</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif !important;
+        }
+        
+        .bi, .bi::before, [class*=" bi-"], [class^="bi-"] {
+            font-family: 'bootstrap-icons' !important;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .card {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0,0,0,.1) !important;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            opacity: 1;
+        }
+        
+        .btn {
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(13,110,253,0.3);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            border: none;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-outline-danger {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+        
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-outline-secondary {
+            border-color: #dee2e6;
+        }
+        
+        .btn-outline-secondary:hover {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            color: white;
+        }
+        
+        .alert {
+            border-radius: 20px;
+            border: none;
+        }
+        
+        .text-success {
+            color: #28a745 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4" style="background-color: white; padding: 20px; border-radius: 15px;">
+        <!-- Заголовок по центру с эмодзи -->
+        <div style="text-align: center; margin-bottom: 24px;">
+            <div style="margin-bottom: 12px;">
+                <i class="bi bi-cart3" style="font-size: 48px; color: #28a745;"></i>
+            </div>
+            <h2 style="font-weight: 700; letter-spacing: -0.3px;">Моя корзина</h2>
+        </div>
+
+        @if (!Model.IsAuthenticated)
+        {
+            <div style="text-align: center; padding: 60px 20px; max-width: 450px; margin: 0 auto; background: white; border-radius: 16px;">
+                <div style="margin-bottom: 24px;">
+                    <i class="bi bi-person-lock" style="font-size: 72px; color: #adb5bd;"></i>
+                </div>
+                <h3 style="font-weight: 700; margin-bottom: 16px; letter-spacing: -0.3px;">Требуется авторизация</h3>
+                <p style="font-weight: 500; color: #6c757d; margin-bottom: 28px; letter-spacing: -0.2px;">
+                    Чтобы просматривать <strong style="font-weight: 700;">корзину</strong>,<br>
+                    войдите в свой аккаунт
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <a href="/Authorization/Login" style="background: #28a745; color: white; border: none; padding: 10px 28px; border-radius: 40px; font-weight: 600; text-decoration: none; font-size: 14px;">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                    </a>
+                    <a href="/Registration/Register" style="background: #f1f3f5; color: #28a745; border: none; padding: 10px 28px; border-radius: 40px; font-weight: 600; text-decoration: none; font-size: 14px;">
+                        <i class="bi bi-person-plus me-2"></i>Регистрация
+                    </a>
+                </div>
+                <div style="margin-top: 24px;">
+                    <a href="/Menu" style="color: #868e96; font-size: 13px; font-weight: 500; text-decoration: none;">
+                        <i class="bi bi-arrow-left me-1"></i>В меню
+                    </a>
+                </div>
+            </div>
+        }
+        else if (!Model.CartItems.Any())
+        {
+            <div class="alert alert-info text-center py-5" style="border-radius: 20px;">
+                <i class="bi bi-cart-x fs-1 mb-3 d-block"></i>
+                <h4 class="mt-2 mb-4">Ваша корзина пуста</h4>
+                <p class="mb-4">Добавьте блюда из меню, чтобы оформить заказ</p>
+                <a href="/Menu" class="btn btn-success px-4" style="border-radius: 30px;">
+                    <i class="bi bi-menu-app me-1"></i>Перейти в меню
+                </a>
+            </div>
+        }
+        else
+        {
+            <form id="antiForgeryForm" style="display:none;">@Html.AntiForgeryToken()</form>
+
+            <div class="row g-4">
+                @foreach (var item in Model.CartItems)
+                {
+                    var icon = item.CategoryId == 1 ? "🍕" : item.CategoryId == 2 ? "🍔" : item.CategoryId == 3 ? "🍣" : item.CategoryId == 10 ? "🍰" : "🥤";
+                    <div class="col-12">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="card rounded-4 p-4 flex-grow-1" style="border: 1px solid #dee2e6; box-shadow: none; max-width: 60%;">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-3 d-flex align-items-center justify-content-center ms-2" style="width: 120px; height: 120px; font-size: 4.2rem; flex-shrink: 0;">
+                                        @icon
+                                    </div>
+                                    <div class="ms-5">
+                                        <div class="fw-semibold fs-5" style="margin-top: -8px;">
+                                            @item.DishName
+                                            <span class="text-muted small">| @item.CategoryName | @item.SubcategoryName</span>
+                                        </div>
+                                        <div class="text-muted small" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px;">
+                                            @(item.ShortDescription ?? "Без описания")
+                                        </div>
+                                        <div class="text-muted small" style="margin-top: 18px;">
+                                            @item.SizeName размер
+                                            @if (item.Weight.HasValue)
+                                            {
+                                                <span> • @item.Weight.Value.ToString("F0") г</span>
+                                            }
+                                        </div>
+                                        <div style="margin-top: 4px;">
+                                            <span class="fw-bold text-success fs-5">@item.Price.ToString("C")</span>
+                                            <span class="text-muted" style="font-size: 0.75rem;"> / 1 шт</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center flex-shrink-0" style="margin-left: 1.5rem; gap: 1.8rem;">
+                                <div class="fw-bold text-success item-subtotal text-end" data-cart-item-id="@item.CartItemId" style="font-size: 1.15rem; min-width: 110px; width: 110px; flex-shrink: 0;">
+                                    @((item.Price * item.Quantity).ToString("C"))
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                    <button class="btn btn-outline-secondary btn-sm rounded-circle qty-decr" style="width: 34px; height: 34px; padding: 0;" data-cart-item-id="@item.CartItemId">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" class="form-control form-control-sm text-center item-qty"
+                                           style="width: 50px; height: 34px; font-size: 1rem; font-weight: bold;" value="@item.Quantity" min="1" max="99"
+                                           data-cart-item-id="@item.CartItemId" data-price="@item.Price">
+                                    <button class="btn btn-outline-secondary btn-sm rounded-circle qty-incr" style="width: 34px; height: 34px; padding: 0;" data-cart-item-id="@item.CartItemId">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+
+                                <button class="btn btn-outline-danger btn-sm rounded-circle remove-item flex-shrink-0" style="width: 34px; height: 34px; padding: 0;" data-cart-item-id="@item.CartItemId" title="Удалить">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 bg-light p-3 rounded-4">
+                <h5 class="mb-0">Итого</h5>
+                <h4 class="mb-0 text-success" id="cartTotal">@Model.Total.ToString("C")</h4>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between mt-4 w-100">
+                <div class="text-start">
+                    <a href="/Menu" class="btn btn-outline-secondary px-4" style="border-radius: 30px;">
+                        <i class="bi bi-arrow-left me-1"></i>Продолжить выбор
+                    </a>
+                </div>
+                <div class="text-center">
+                    <button type="button" id="clearCartBtn" class="btn btn-outline-danger px-4" style="border-radius: 30px;">
+                        <i class="bi bi-trash3 me-1"></i>Очистить корзину
+                    </button>
+                </div>
+                <div class="text-end">
+                    <a href="/Order/Create" class="btn btn-success px-5" style="border-radius: 30px;">
+                        Оформить заказ <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function getAntiForgeryToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        }
+
+        async function updateQuantity(cartItemId, newQuantity) {
+            try {
+                const response = await fetch('/Cart/MyCart?handler=UpdateQuantity', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getAntiForgeryToken()
+                    },
+                    body: JSON.stringify({ cartItemId: cartItemId, quantity: newQuantity })
+                });
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.json();
+                if (data.success) {
+                    const container = document.querySelector(`[data-cart-item-id="${cartItemId}"]`).closest('.col-12');
+                    const price = parseFloat(container.querySelector('.item-qty').dataset.price);
+                    const subtotalCell = container.querySelector('.item-subtotal');
+                    subtotalCell.textContent = (price * newQuantity).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
+                    document.getElementById('cartTotal').textContent = data.total.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
+                    if (window.loadCartCount) window.loadCartCount();
+                } else {
+                    alert(data.message || 'Ошибка обновления');
+                    location.reload();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка соединения');
+                location.reload();
+            }
+        }
+
+        async function removeItem(cartItemId) {
+            if (!confirm('Удалить блюдо из корзины?')) return;
+            try {
+                const response = await fetch('/Cart/MyCart?handler=RemoveItem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getAntiForgeryToken()
+                    },
+                    body: JSON.stringify({ cartItemId: cartItemId })
+                });
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.json();
+                if (data.success) {
+                    const col = document.querySelector(`[data-cart-item-id="${cartItemId}"]`).closest('.col-12');
+                    if (col) col.remove();
+                    document.getElementById('cartTotal').textContent = data.total.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
+                    if (data.total === 0) location.reload();
+                    if (window.loadCartCount) window.loadCartCount();
+                } else {
+                    alert(data.message || 'Ошибка удаления');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка соединения');
+            }
+        }
+
+        async function clearCart() {
+            if (!confirm('Вы уверены, что хотите очистить корзину? Все блюда будут удалены.')) return;
+            try {
+                const btn = document.getElementById('clearCartBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Очистка...';
+
+                const response = await fetch('/Cart/MyCart?handler=ClearCart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getAntiForgeryToken()
+                    },
+                    body: JSON.stringify({})
+                });
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Ошибка очистки корзины');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Очистить корзину';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка соединения');
+                const btn = document.getElementById('clearCartBtn');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-trash3 me-1"></i>Очистить корзину';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.qty-decr').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const container = this.closest('.col-12');
+                    const input = container.querySelector('.item-qty');
+                    const cartItemId = input.dataset.cartItemId;
+                    let newQty = parseInt(input.value) - 1;
+                    if (newQty >= 1) {
+                        input.value = newQty;
+                        updateQuantity(cartItemId, newQty);
+                    }
+                });
+            });
+            document.querySelectorAll('.qty-incr').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const container = this.closest('.col-12');
+                    const input = container.querySelector('.item-qty');
+                    const cartItemId = input.dataset.cartItemId;
+                    let newQty = parseInt(input.value) + 1;
+                    if (newQty <= 99) {
+                        input.value = newQty;
+                        updateQuantity(cartItemId, newQty);
+                    }
+                });
+            });
+            document.querySelectorAll('.item-qty').forEach(input => {
+                input.addEventListener('change', function() {
+                    const cartItemId = this.dataset.cartItemId;
+                    let newQty = parseInt(this.value);
+                    if (isNaN(newQty) || newQty < 1) newQty = 1;
+                    if (newQty > 99) newQty = 99;
+                    this.value = newQty;
+                    updateQuantity(cartItemId, newQty);
+                });
+            });
+            document.querySelectorAll('.remove-item').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const cartItemId = this.dataset.cartItemId;
+                    removeItem(cartItemId);
+                });
+            });
+            document.getElementById('clearCartBtn')?.addEventListener('click', clearCart);
+        });
+    </script>
+</body>
+</html>

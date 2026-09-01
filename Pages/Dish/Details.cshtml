@@ -1,0 +1,248 @@
+﻿@page
+@model MaxFood.Pages.Dish.DetailsModel
+@{
+    ViewData["Title"] = Model.Dish.DishName;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            @if (!string.IsNullOrEmpty(Model.Dish.ImagePath))
+            {
+                <img src="@Model.Dish.ImagePath" class="img-fluid rounded shadow" alt="@Model.Dish.DishName" />
+            }
+            else
+            {
+                <div class="bg-light rounded d-flex align-items-center justify-content-center shadow-sm" style="height: 350px;">
+                    <span class="text-muted">Нет изображения</span>
+                </div>
+            }
+        </div>
+        <div class="col-md-6">
+            <h1 class="display-5 fw-bold">@Model.Dish.DishName</h1>
+            <div class="mb-3">
+                <span class="badge bg-primary">@Model.Dish.Category?.CategoryName</span>
+                @if (Model.Dish.Subcategory != null)
+                {
+                    <span class="badge bg-secondary">@Model.Dish.Subcategory.SubcategoryName</span>
+                }
+            </div>
+
+            <div class="card bg-light mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">
+                        <i class="bi bi-info-circle-fill me-2"></i>Описание
+                    </h5>
+                    <p class="card-text">@(Model.Dish.FullDescription ?? "Описание отсутствует")</p>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.Dish.Ingredients))
+            {
+                <div class="mb-3">
+                    <h6 class="fw-bold"><i class="bi bi-basket-fill me-2"></i>Состав:</h6>
+                    <p class="text-muted">@Model.Dish.Ingredients</p>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.Dish.NutritionalValue))
+            {
+                <div class="mb-3">
+                    <h6 class="fw-bold"><i class="bi bi-bar-chart-fill me-2"></i>Пищевая ценность:</h6>
+                    <p class="text-muted">@Model.Dish.NutritionalValue</p>
+                </div>
+            }
+
+            <div class="mb-4">
+                @if (Model.Dish.Calories.HasValue)
+                {
+                    <span class="badge bg-secondary me-2"><i class="bi bi-fire"></i> @Model.Dish.Calories.Value ккал</span>
+                }
+                @if (Model.Dish.PreparationTime.HasValue)
+                {
+                    <span class="badge bg-info"><i class="bi bi-clock"></i> ~@Model.Dish.PreparationTime.Value мин</span>
+                }
+            </div>
+
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Выберите размер</h5>
+                    <div id="sizeOptions" class="d-flex flex-column gap-2 mb-3"></div>
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-auto">
+                            <label class="form-label fw-bold">Количество:</label>
+                            <div class="input-group" style="width: 120px;">
+                                <button class="btn btn-outline-secondary" id="decrementQty">-</button>
+                                <input type="number" id="quantity" class="form-control text-center" value="1" min="1">
+                                <button class="btn btn-outline-secondary" id="incrementQty">+</button>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="alert alert-success mb-0" id="totalPrice">Итого: <strong>0 ₽</strong></div>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary btn-lg" id="addToCartBtn"><i class="bi bi-cart-plus"></i> Добавить в корзину</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const variants = @Html.Raw(Json.Serialize(Model.Dish.DishVariants));
+    let selectedVariantId = variants[0]?.dishVariantId;
+    let selectedPrice = variants[0]?.price || 0;
+
+    function loadCartCount() {
+        fetch('/Cart/MyCart?handler=Count')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var badge = document.getElementById('cartBadge');
+                if (badge) {
+                    badge.textContent = data.count;
+                    badge.style.display = data.count > 0 ? 'inline-block' : 'none';
+                }
+            })
+            .catch(function(err) {
+                console.log('Ошибка загрузки корзины:', err);
+            });
+    }
+
+    function showNotification(message, type) {
+        var notification = document.createElement('div');
+        notification.className = 'alert alert-' + (type === 'success' ? 'success' : 'danger') + ' position-fixed top-0 end-0 m-3';
+        notification.style.zIndex = '9999';
+        notification.style.minWidth = '250px';
+        notification.innerHTML = message;
+        document.body.appendChild(notification);
+        setTimeout(function() { notification.remove(); }, 3000);
+    }
+
+    function addToCart() {
+        var qtyInput = document.getElementById('quantity');
+        var qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+
+        if (!selectedVariantId || qty <= 0) {
+            alert('Выберите размер блюда');
+            return;
+        }
+
+        fetch('/Cart/MyCart?handler=AddToCart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dishVariantId: selectedVariantId, quantity: qty })
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                loadCartCount();
+                showNotification('Товар добавлен в корзину!', 'success');
+            } else {
+                showNotification('Ошибка: ' + (data.message || 'Не удалось добавить'), 'danger');
+            }
+        })
+        .catch(function(error) {
+            console.error('Ошибка:', error);
+            showNotification('Ошибка при добавлении в корзину', 'danger');
+        });
+    }
+
+    function renderSizeOptions() {
+        var container = document.getElementById('sizeOptions');
+        if (!container) return;
+        container.innerHTML = '';
+        for (var i = 0; i < variants.length; i++) {
+            var variant = variants[i];
+            var div = document.createElement('div');
+            div.className = 'size-option' + (i === 0 ? ' selected' : '');
+            div.setAttribute('data-variant-id', variant.dishVariantId);
+            div.onclick = (function(id) { return function() { selectVariant(id); }; })(variant.dishVariantId);
+            div.innerHTML = '<div class="d-flex justify-content-between align-items-center p-2 rounded">' +
+                '<div class="form-check">' +
+                '<input class="form-check-input" type="radio" name="sizeOption" value="' + variant.dishVariantId + '"' + (i === 0 ? ' checked' : '') + '>' +
+                '<label class="form-check-label fw-bold">' + variant.sizeName + '</label>' +
+                '</div>' +
+                '<div class="text-end">' +
+                '<span class="fw-bold text-primary">' + variant.price.toLocaleString() + ' ₽</span>' +
+                '<span class="text-muted small ms-1">/ ' + variant.weight + ' г</span>' +
+                '</div>' +
+                '</div>';
+            container.appendChild(div);
+        }
+    }
+
+    function selectVariant(variantId) {
+        selectedVariantId = variantId;
+        for (var i = 0; i < variants.length; i++) {
+            if (variants[i].dishVariantId == variantId) {
+                selectedPrice = variants[i].price;
+                break;
+            }
+        }
+        var options = document.querySelectorAll('.size-option');
+        for (var i = 0; i < options.length; i++) {
+            var opt = options[i];
+            if (opt.getAttribute('data-variant-id') == variantId) {
+                opt.classList.add('selected');
+                var radio = opt.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
+            } else {
+                opt.classList.remove('selected');
+            }
+        }
+        updateTotalPrice();
+    }
+
+    function updateTotalPrice() {
+        var qtyInput = document.getElementById('quantity');
+        var qty = qtyInput ? (parseInt(qtyInput.value) || 1) : 1;
+        var total = selectedPrice * qty;
+        var totalSpan = document.getElementById('totalPrice');
+        if (totalSpan) {
+            totalSpan.innerHTML = 'Итого: <strong>' + total.toLocaleString() + ' ₽</strong>';
+        }
+    }
+
+    document.getElementById('addToCartBtn')?.addEventListener('click', addToCart);
+    document.getElementById('decrementQty')?.addEventListener('click', function() {
+        var input = document.getElementById('quantity');
+        var val = parseInt(input.value);
+        if (val > 1) {
+            input.value = val - 1;
+            updateTotalPrice();
+        }
+    });
+    document.getElementById('incrementQty')?.addEventListener('click', function() {
+        var input = document.getElementById('quantity');
+        input.value = parseInt(input.value) + 1;
+        updateTotalPrice();
+    });
+    document.getElementById('quantity')?.addEventListener('change', updateTotalPrice);
+
+    renderSizeOptions();
+    updateTotalPrice();
+    loadCartCount();
+</script>
+
+<style>
+    .size-option {
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .size-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .size-option.selected {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+</style>

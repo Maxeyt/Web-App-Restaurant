@@ -1,0 +1,433 @@
+﻿@page
+@model MaxFood.Pages.FavoriteDish.MyFavoriteDishModel
+@{
+    ViewData["Title"] = "Избранное";
+}
+
+@{
+    var categoryIcons = new Dictionary<int, string>
+    {
+        { 1, "🍕" }, { 2, "🍔" }, { 3, "🍣" }, { 4, "🍜" }, { 5, "🔥" },
+        { 6, "🍳" }, { 7, "🥣" }, { 8, "🥗" }, { 9, "🍟" }, { 10, "🍰" }, { 11, "🥤" }
+    };
+}
+
+<div class="container mt-4" style="background-color: white; padding: 20px; border-radius: 12px;">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <div style="margin-bottom: 12px;">
+            <i class="bi bi-heart-fill" style="font-size: 48px; color: #dc3545;"></i>
+        </div>
+        <h2 style="font-weight: 700; letter-spacing: -0.3px;">Избранное</h2>
+    </div>
+
+    @if (!Model.IsAuthenticated)
+    {
+        <div style="text-align: center; padding: 60px 20px; max-width: 450px; margin: 0 auto; background: white; border-radius: 12px;">
+            <div style="margin-bottom: 24px;">
+                <i class="bi bi-person-lock" style="font-size: 72px; color: #adb5bd;"></i>
+            </div>
+            <h3 style="font-weight: 700; margin-bottom: 16px; letter-spacing: -0.3px;">Требуется авторизация</h3>
+            <p style="font-weight: 500; color: #6c757d; margin-bottom: 28px; letter-spacing: -0.2px;">
+                Чтобы просматривать <strong style="font-weight: 700;">избранное</strong>,<br>
+                войдите в свой аккаунт
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <a href="/Authorization/Login" style="background: #28a745; color: white; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px;">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                </a>
+                <a href="/Registration/Register" style="background: #f1f3f5; color: #28a745; border: none; padding: 10px 28px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px;">
+                    <i class="bi bi-person-plus me-2"></i>Регистрация
+                </a>
+            </div>
+            <div style="margin-top: 24px;">
+                <a href="/Menu" style="color: #868e96; font-size: 13px; font-weight: 500; text-decoration: none;">
+                    <i class="bi bi-arrow-left me-1"></i>В меню
+                </a>
+            </div>
+        </div>
+    }
+    else if (Model.Categories == null || !Model.Categories.Any())
+    {
+        <div class="alert alert-info text-center py-5" style="border-radius: 12px;">
+            <i class="bi bi-heartbreak fs-1 mb-3 d-block"></i>
+            <h4 class="mt-2 mb-4">В избранном пока пусто</h4>
+            <a href="/Menu" class="btn btn-success px-4" style="border-radius: 8px;">Перейти в меню</a>
+        </div>
+    }
+    else
+    {
+        <div style="padding: 20px 0px; position: relative; z-index: 1; width: 100%; margin: 0 auto;">
+            @foreach (var category in Model.Categories)
+            {
+                var icon = categoryIcons.ContainsKey(category.CategoryId) ? categoryIcons[category.CategoryId] : "📁";
+                <div class="category-section-wrapper" style="scroll-margin-top: 150px;">
+                    <div class="category-section-highlight" style="background-color: white; padding: 15px; border-radius: 12px;">
+                        <div class="category-section mb-0">
+                            <h2 class="mb-3 pb-2 border-bottom">
+                                <span class="me-2">@icon</span> @category.CategoryName
+                            </h2>
+
+                            @for (int i = 0; i < category.SubcategoryGroups.Count; i++)
+                            {
+                                var subGroup = category.SubcategoryGroups[i];
+                                var marginTopClass = i == 0 ? "mt-2" : "mt-4";
+
+                                @if (subGroup.SubcategoryName != "Без подкатегории")
+                                {
+                                    <h4 class="@marginTopClass mb-2 text-secondary" style="font-size: 1.3rem; padding-left: 12px;">@subGroup.SubcategoryName</h4>
+                                }
+
+                                <div class="row" style="--bs-gutter-x: 1.0rem; --bs-gutter-y: 1.5rem;">
+                                    @foreach (var dish in subGroup.Dishes)
+                                    {
+                                        var dishRatingClass = dish.AverageRating > 0 ? "rating-badge" : "rating-badge rating-zero";
+
+                                        <div class="col-md-2-4" id="dish-@dish.DishId" data-dish-name="@dish.DishName" style="scroll-margin-top: 300px;">
+                                            <div class="card h-100 shadow-sm dish-card" data-dish-id="@dish.DishId" data-variant-id="@dish.DishVariantId" data-dish-name="@dish.DishName" style="cursor: pointer;">
+                                                <div class="card-body pt-3 pb-1">
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center mb-2 dish-image-container" style="font-size: 3.40rem; margin-top: 8px;">
+                                                        <span>@icon</span>
+                                                    </div>
+                                                    <h6 class="card-title mt-2 text-truncate" style="font-size: 1.021rem;">@dish.DishName</h6>
+                                                    <p class="card-text small text-muted" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 34px; max-height: 34px; font-size: 0.793rem; line-height: 18px; margin-bottom: 4px;">
+                                                        @(dish.ShortDescription ?? "Без описания")
+                                                    </p>
+                                                    <p class="fw-bold text-success mb-1" style="font-size: 0.964rem;">@dish.Price.ToString("C") / @dish.Weight.ToString("F0") г</p>
+                                                </div>
+                                                <div class="card-footer bg-white border-top-0 pt-0 pb-2">
+                                                    <div class="d-flex justify-content-between align-items-center" style="font-size: 0.793rem; color: #6c757d;">
+                                                        <div class="@dishRatingClass"
+                                                             onclick="event.stopPropagation(); window.location.href='/Review/Index?type=dish&dishId=@dish.DishId'"
+                                                             style="cursor: pointer;">
+                                                            <span>@dish.AverageRating.ToString("0.0")</span>
+                                                            <i class="bi bi-star-fill"></i>
+                                                        </div>
+                                                        <div class="d-flex gap-2">
+                                                            <button class="btn btn-danger rounded-circle d-flex align-items-center justify-content-center remove-fav-btn"
+                                                                    style="width: 33px; height: 33px; padding: 0; font-size: 14px;"
+                                                                    data-variant-id="@dish.DishVariantId" title="Удалить из избранного">
+                                                                <i class="bi bi-heart-fill"></i>
+                                                            </button>
+                                                            <button class="btn btn-success rounded-circle d-flex align-items-center justify-content-center quick-add-btn"
+                                                                    style="width: 33px; height: 33px; padding: 0; font-size: 14px;"
+                                                                    data-variant-id="@dish.DishVariantId" data-dish-name="@dish.DishName" data-price="@dish.Price" title="Быстро добавить">
+                                                                <i class="bi bi-plus-lg"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .col-md-2-4 {
+        flex: 0 0 20%;
+        max-width: 20%;
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+    }
+
+    @@media (max-width: 992px) {
+        .col-md-2-4 {
+            flex: 0 0 33.333%;
+            max-width: 33.333%;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .col-md-2-4 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .col-md-2-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+
+    .dish-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        position: relative;
+        z-index: 1;
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    .dish-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,.12);
+    }
+
+    .dish-image-container {
+        aspect-ratio: 1 / 1;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 12px;
+    }
+
+    .quick-add-btn {
+        transition: all 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .quick-add-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 10px rgba(40, 167, 69, 0.4);
+    }
+
+    .remove-fav-btn {
+        transition: all 0.2s;
+    }
+
+    .remove-fav-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .rating-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 0.793rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid #ffc107;
+        background-color: transparent;
+        color: #ffc107;
+    }
+
+    .rating-badge i {
+        font-size: 0.7rem;
+    }
+
+    .rating-badge:hover {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #212529;
+    }
+
+    .rating-zero {
+        border-color: #adb5bd;
+        color: #adb5bd;
+    }
+
+    .rating-zero:hover {
+        background-color: #6c757d;
+        border-color: #6c757d;
+        color: white;
+    }
+</style>
+
+@section Scripts {
+    <form id="antiForgeryForm" style="display:none;">@Html.AntiForgeryToken()</form>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function getAntiForgeryToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        }
+
+        function showNotification(m, t) {
+            const n = document.createElement('div');
+            n.className = `alert alert-${t === 'success' ? 'success' : 'danger'} position-fixed top-0 end-0 m-3`;
+            n.style.zIndex = '9999';
+            n.innerHTML = m;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
+        }
+
+        function showAuthModalForCart() {
+            if (document.getElementById('authModal')) return;
+            var m = document.createElement('div');
+            m.innerHTML = '<div class="modal fade" id="authModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-warning"><h5 class="modal-title">Требуется авторизация</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><p>Чтобы добавить блюдо в <strong>корзину</strong>, пожалуйста, <strong>войдите</strong> или <strong>зарегистрируйтесь</strong>.</p><div class="d-flex gap-3 justify-content-center mt-4"><a href="/Authorization/Login" class="btn btn-primary">Войти</a><a href="/Registration/Register" class="btn btn-outline-success">Регистрация</a></div></div></div></div></div>';
+            document.body.appendChild(m.firstElementChild);
+            new bootstrap.Modal(document.getElementById('authModal')).show();
+        }
+
+        function showAuthModalForFavorite() {
+            if (document.getElementById('authModal')) return;
+            var m = document.createElement('div');
+            m.innerHTML = '<div class="modal fade" id="authModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-warning"><h5 class="modal-title">Требуется авторизация</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body text-center"><p>Чтобы добавить блюдо в <strong>избранное</strong>, пожалуйста, <strong>войдите</strong> или <strong>зарегистрируйтесь</strong>.</p><div class="d-flex gap-3 justify-content-center mt-4"><a href="/Authorization/Login" class="btn btn-primary">Войти</a><a href="/Registration/Register" class="btn btn-outline-success">Регистрация</a></div></div></div></div></div>';
+            document.body.appendChild(m.firstElementChild);
+            new bootstrap.Modal(document.getElementById('authModal')).show();
+        }
+
+        async function checkAuth() {
+            try { return (await fetch('/Cart/MyCart?handler=Count')).ok; }
+            catch { return false; }
+        }
+
+        async function quickAddToCart(variantId, dishName) {
+            if (!variantId) return;
+            if (!await checkAuth()) { showAuthModalForCart(); return; }
+            fetch('/Cart/MyCart?handler=AddToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getAntiForgeryToken()
+                },
+                body: JSON.stringify({ dishVariantId: variantId, quantity: 1 })
+            }).then(r => r.json()).then(d => {
+                if (d.success) {
+                    if (window.loadCartCount) window.loadCartCount();
+                    showNotification(`✅ ${dishName} добавлено!`, 'success');
+                } else showNotification('❌ ' + (d.message || 'Ошибка'), 'danger');
+            }).catch(() => showNotification('❌ Ошибка соединения', 'danger'));
+        }
+
+        async function removeFavorite(variantId) {
+            if (!await checkAuth()) { window.location.href = '/Authorization/Login'; return; }
+            fetch('/FavoriteDish/Add?handler=Toggle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getAntiForgeryToken()
+                },
+                body: JSON.stringify({ dishVariantId: variantId })
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+                else showNotification('❌ ' + (d.message || 'Ошибка'), 'danger');
+            }).catch(() => showNotification('❌ Ошибка соединения', 'danger'));
+        }
+
+        function renderModalContent(dish) {
+            let variantsHtml = '';
+            if (dish.dishVariants && dish.dishVariants.length > 0) {
+                dish.dishVariants.forEach(function(v, i) {
+                    variantsHtml += '<div class="size-option mb-2' + (i === 0 ? ' selected' : '') + '" data-variant-id="' + v.dishVariantId + '" data-price="' + v.price + '">' +
+                        '<div class="d-flex justify-content-between align-items-center">' +
+                            '<span class="fw-bold">' + v.sizeName + '</span>' +
+                            '<span class="fw-bold text-success">' + v.price.toLocaleString() + ' ₽ <small class="text-muted">/ ' + v.weight + ' г</small></span>' +
+                        '</div>' +
+                    '</div>';
+                });
+            }
+
+            let html = '';
+
+            html += '<div class="card bg-light mb-3"><div class="card-body">' +
+                '<h5 class="card-title fw-bold"><i class="bi bi-info-circle-fill me-2"></i>Описание</h5>' +
+                '<p class="card-text">' + (dish.fullDescription || dish.shortDescription || 'Описание отсутствует') + '</p>' +
+            '</div></div>';
+
+            if (dish.ingredients) {
+                html += '<div class="mb-3"><h6 class="fw-bold"><i class="bi bi-basket-fill me-2"></i>Состав:</h6>' +
+                    '<p class="text-muted">' + dish.ingredients + '</p></div>';
+            }
+
+            if (dish.nutritionalValue) {
+                html += '<div class="mb-3"><h6 class="fw-bold"><i class="bi bi-bar-chart-fill me-2"></i>Пищевая ценность:</h6>' +
+                    '<p class="text-muted">' + dish.nutritionalValue + '</p></div>';
+            }
+
+            html += '<div class="mb-3">';
+            if (dish.calories) html += '<span class="badge bg-secondary me-2"><i class="bi bi-fire"></i> ' + dish.calories + ' ккал</span>';
+            if (dish.preparationTime) html += '<span class="badge bg-info"><i class="bi bi-clock"></i> ~' + dish.preparationTime + ' мин</span>';
+            html += '</div>';
+
+            if (dish.dishVariants && dish.dishVariants.length > 0) {
+                html += '<h6 class="fw-bold">Выберите размер</h6><div>' + variantsHtml + '</div>';
+                html += '<button class="btn btn-success w-100 mt-3" id="modalAddToCartBtn">' +
+                    '<i class="bi bi-cart-plus me-2"></i>В корзину' +
+                '</button>';
+            } else {
+                html += '<div class="alert alert-warning">Нет доступных вариантов</div>';
+            }
+
+            return html;
+        }
+
+        function attachModalHandlers(dish) {
+            let selectedVariantId = dish.dishVariants && dish.dishVariants.length > 0 ? dish.dishVariants[0].dishVariantId : null;
+
+            document.querySelectorAll('#modalDishBody .size-option').forEach(function(option) {
+                option.addEventListener('click', function() {
+                    selectedVariantId = parseInt(this.dataset.variantId);
+                    document.querySelectorAll('#modalDishBody .size-option').forEach(function(opt) {
+                        if (parseInt(opt.dataset.variantId) === selectedVariantId) {
+                            opt.classList.add('selected');
+                        } else {
+                            opt.classList.remove('selected');
+                        }
+                    });
+                });
+            });
+
+            var addBtn = document.getElementById('modalAddToCartBtn');
+            if (addBtn) {
+                var newBtn = addBtn.cloneNode(true);
+                addBtn.parentNode.replaceChild(newBtn, addBtn);
+                newBtn.addEventListener('click', async function() {
+                    if (selectedVariantId) {
+                        await quickAddToCart(selectedVariantId, dish.dishName);
+                        var modalEl = document.getElementById('dishModal');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+                });
+            }
+        }
+
+        async function openDishModal(dishId) {
+            var modalEl = document.getElementById('dishModal');
+            if (!modalEl) {
+                console.error('Модальное окно #dishModal не найдено!');
+                return;
+            }
+            var modal = new bootstrap.Modal(modalEl);
+            document.getElementById('modalDishTitle').innerText = 'Загрузка...';
+            document.getElementById('modalDishBody').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
+            modal.show();
+
+            try {
+                var response = await fetch('/Dish/Details?handler=GetDetailsJson&id=' + dishId);
+                var dish = await response.json();
+                document.getElementById('modalDishTitle').innerText = dish.dishName;
+                document.getElementById('modalDishBody').innerHTML = renderModalContent(dish);
+                attachModalHandlers(dish);
+            } catch (error) {
+                console.error('Ошибка загрузки блюда:', error);
+                document.getElementById('modalDishBody').innerHTML = '<div class="alert alert-danger">Ошибка загрузки блюда</div>';
+            }
+        }
+
+        document.querySelectorAll('.dish-card').forEach(card => {
+            card.addEventListener('click', async function(e) {
+                if (e.target.closest('.quick-add-btn') || e.target.closest('.remove-fav-btn')) return;
+                const dishId = this.dataset.dishId;
+                if (dishId) await openDishModal(dishId);
+            });
+        });
+
+        document.querySelectorAll('.quick-add-btn').forEach(b => {
+            b.addEventListener('click', e => {
+                e.stopPropagation();
+                quickAddToCart(b.dataset.variantId, b.dataset.dishName);
+            });
+        });
+
+        document.querySelectorAll('.remove-fav-btn').forEach(b => {
+            b.addEventListener('click', e => {
+                e.stopPropagation();
+                removeFavorite(parseInt(b.dataset.variantId));
+            });
+        });
+    </script>
+}

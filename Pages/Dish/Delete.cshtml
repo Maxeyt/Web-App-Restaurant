@@ -1,0 +1,56 @@
+﻿@page
+@model MaxFood.Pages.Dish.DeleteModel
+@{
+    ViewData["Title"] = "Удалить блюдо";
+}
+
+@if (!Model.HasAccess)
+{
+    <div class="container mt-5">
+        <div class="alert alert-danger text-center">
+            <h4><i class="bi bi-shield-lock-fill me-2"></i>Доступ запрещён</h4>
+            <p>Эта страница доступна только администраторам и менеджерам.</p>
+            <a href="/" class="btn btn-outline-danger mt-2">← На главную</a>
+        </div>
+    </div>
+    return;
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4"><i class="bi bi-trash-fill text-danger me-2"></i>Удалить блюдо</h1>
+
+    <div class="alert alert-danger">
+        <h3>Вы уверены, что хотите удалить это блюдо?</h3>
+        <p>Вместе с блюдом будут удалены все его варианты (размеры).</p>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-2">Название</dt>
+                <dd class="col-sm-10">@Model.Dish.DishName</dd>
+                <dt class="col-sm-2">Категория</dt>
+                <dd class="col-sm-10">@Model.Dish.Category?.CategoryName</dd>
+                <dt class="col-sm-2">Доступно</dt>
+                <dd class="col-sm-10">@(Model.Dish.IsAvailable ? "Да" : "Нет")</dd>
+            </dl>
+        </div>
+    </div>
+
+    @if (Model.Dish.DishVariants != null && Model.Dish.DishVariants.Any())
+    {
+        <h4>Варианты, которые будут удалены:</h4>
+        <ul>
+            @foreach (var variant in Model.Dish.DishVariants)
+            {
+                <li>@variant.SizeName - @variant.Price.ToString("C") (@variant.Weight г)</li>
+            }
+        </ul>
+    }
+
+    <form method="post">
+        <input type="hidden" asp-for="Dish.DishId" />
+        <button type="submit" class="btn btn-danger">Удалить</button>
+        <a href="/Dish/Index" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>

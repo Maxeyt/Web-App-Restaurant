@@ -1,0 +1,1305 @@
+﻿@page
+@model MaxFood.Pages.Order.CreateModel
+@{
+    ViewData["Title"] = "Оформление заказа";
+    var pickupPoints = Model.PointPickups ?? new List<MaxFood.Models.PointPickup>();
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - MaxFood</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif !important; letter-spacing: -0.2px; }
+        .bi, .bi::before, [class*=" bi-"], [class^="bi-"] { font-family: 'bootstrap-icons' !important; }
+        body { background-color: #f5f5f5; margin: 0; padding: 20px; }
+
+        .address-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .address-card.default { border-color: #2b8c4a; background: #f8fff8; }
+        .address-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .address-card-top { display: flex; align-items: center; padding: 14px 16px; gap: 12px; }
+        .address-info { flex: 1; }
+        .address-comment { margin: 0 16px 12px; font-size: 0.7rem; color: #6c757d; background: #f8f9fa; padding: 6px 10px; border-radius: 8px; }
+        .address-card-actions { display: flex; gap: 8px; padding: 10px 16px; justify-content: flex-end; border-top: 1px solid #f0f0f0; background: #fafbfc; }
+        .default-badge {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.95);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            border: 1px solid #e9ecef;
+            z-index: 2;
+        }
+
+        .payment-card {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            color: white;
+            position: relative;
+            background: linear-gradient(135deg, #2b8c4a 0%, #1e6b38 100%);
+            transition: transform 0.2s;
+        }
+        .payment-card.default { border: 3px solid #ffd700; }
+        .payment-card:hover { transform: translateY(-2px); }
+        .payment-card .card-number { font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 12px; }
+        .payment-card .card-expiry { font-size: 0.85rem; opacity: 0.8; }
+        .payment-card-actions { display: flex; gap: 8px; padding: 12px 0 0; justify-content: flex-end; }
+        .payment-card .default-badge { background: rgba(0,0,0,0.6); border: none; }
+
+        .empty-state { text-align: center; padding: 30px 20px; color: #6c757d; }
+        .empty-state i { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+        .delivery-actions, .payment-actions { display: flex; gap: 12px; margin: 20px 0; justify-content: center; flex-wrap: wrap; }
+        .delivery-actions .btn, .payment-actions .btn { border-radius: 8px; padding: 8px 18px; font-size: 0.85rem; }
+        .section-label { font-size: 0.85rem; font-weight: 600; color: #6c757d; margin-bottom: 14px; text-align: center; }
+        
+        .mini-cart-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid #dee2e6; border-radius: 12px; margin-bottom: 8px; background: white; }
+        .mini-cart-emoji { font-size: 1.8rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 12px; flex-shrink: 0; }
+        .mini-cart-info { flex: 1; }
+        .mini-cart-name { font-weight: 600; font-size: 0.85rem; }
+        .mini-cart-price { font-weight: 700; font-size: 0.9rem; color: #198754; }
+        .bonus-section { background: linear-gradient(135deg, #f0f8ff 0%, #e8f4e8 100%); border: 2px solid #28a745; border-radius: 16px; padding: 16px; margin: 16px 0; }
+        .bonus-range { width: 100%; accent-color: #28a745; }
+        .order-header { display: flex; align-items: flex-start; margin-bottom: 20px; }
+        .tabs-wrapper { display: flex; justify-content: center; gap: 24px; margin: 0 auto; }
+        .nav-pills .nav-link { border-radius: 8px !important; padding: 8px 24px; }
+        .nav-pills .nav-link.active { background-color: #2b8c4a !important; color: white !important; }
+        .btn-primary { background-color: #2b8c4a; border-color: #2b8c4a; border-radius: 8px; }
+        .btn-primary:hover { background-color: #236f3d; }
+        .btn-success { background-color: #2b8c4a; border-color: #2b8c4a; border-radius: 8px; }
+        .btn-outline-primary { border-color: #2b8c4a; color: #2b8c4a; border-radius: 8px; }
+        .btn-outline-primary:hover { background-color: #2b8c4a; border-color: #2b8c4a; }
+        
+        .order-container { max-width: 900px; margin: 0 auto; background: white; border-radius: 20px; padding: 20px; border: 1px solid #dee2e6; }
+        
+        .pickup-points-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        .address-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .address-pill:hover {
+            border-color: #2b8c4a;
+            background: #f0fff4;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .address-pill.selected {
+            border-color: #2b8c4a !important;
+            background: #e8f5e9 !important;
+            box-shadow: 0 4px 12px rgba(43,140,74,0.2);
+        }
+        .pill-marker { font-size: 1rem; }
+        .pill-name { font-weight: 700; font-size: 0.75rem; }
+        .pill-address { font-size: 0.65rem; color: #6c757d; }
+        
+        .search-wrapper { position: relative; margin-bottom: 16px; }
+        .search-input-wrapper { display: flex; align-items: center; border: 1px solid #dee2e6; border-radius: 8px; background: white; overflow: hidden; padding: 4px 8px; }
+        .search-input-wrapper:focus-within { border-color: #2b8c4a; box-shadow: 0 0 0 2px rgba(43,140,74,0.1); }
+        .search-icon { padding-left: 8px; color: #6c757d; font-size: 0.85rem; }
+        #mapSearchInput { flex: 1; padding: 8px 12px; border: none; font-size: 0.85rem; outline: none; background: transparent; }
+        .search-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dee2e6; border-radius: 8px; margin-top: 4px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .search-suggestions.show { display: block; }
+        .suggestion-item { padding: 10px 14px; cursor: pointer; font-size: 0.8rem; border-bottom: 1px solid #f0f0f0; }
+        .suggestion-item:hover { background-color: #f0f7ff; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .map-container { border-radius: 12px; overflow: hidden; border: 1px solid #dee2e6; margin: 16px auto; }
+        #yandexMap { width: 100%; height: 350px; background: #f8f9fa; }
+        .pickup-bonus-badge { background: #d4edda; color: #155724; padding: 8px 16px; border-radius: 8px; text-align: center; margin-bottom: 16px; font-size: 0.8rem; font-weight: 500; }
+        
+        /* Стили для подсказок промокодов */
+        .promo-suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .promo-suggestions-list .suggestion-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .promo-suggestions-list .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .promo-suggestions-list .suggestion-item:hover {
+            background-color: #f0f7ff;
+        }
+        .promo-suggestions-list .suggestion-code {
+            font-weight: 600;
+            color: #2b8c4a;
+        }
+        .promo-suggestions-list .suggestion-badge {
+            font-size: 0.65rem;
+            background: #e8f5e9;
+            color: #2b8c4a;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        @@media (max-width: 768px) {
+            body { padding: 10px; }
+            .order-container { padding: 16px; }
+            .pickup-points-row { gap: 8px; }
+            .address-pill { padding: 6px 10px; }
+            .pill-name { font-size: 0.7rem; }
+            .pill-address { font-size: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="order-container">
+        <div class="order-header">
+            <a href="/Cart/MyCart" class="btn btn-outline-secondary btn-sm back-btn"><i class="bi bi-arrow-left"></i> Назад</a>
+            <div class="text-center flex-grow-1">
+                <i class="bi bi-cart-check" style="font-size: 40px; color: #2b8c4a;"></i>
+                <h4 class="fw-bold mt-1">Оформление заказа</h4>
+                <ul class="nav nav-pills tabs-wrapper" id="deliveryTabs">
+                    <li class="nav-item"><a class="nav-link active" href="#" data-tab="delivery"><i class="bi bi-truck me-1"></i> Доставка</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-tab="pickup"><i class="bi bi-shop me-1"></i> Самовывоз</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <form method="post" id="orderForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Order.AppUserId" />
+            <input type="hidden" asp-for="Order.CartId" />
+            <input type="hidden" asp-for="Order.OrderDate" />
+            <input type="hidden" asp-for="Order.TotalAmount" />
+            <input type="hidden" id="finalTotalHidden" name="FinalTotal" />
+            <input type="hidden" id="bonusToSpendHidden" name="BonusToSpend" value="0" />
+            <input type="hidden" id="promoCodeHidden" name="PromoCode" value="" />
+            <input type="hidden" id="deliveryAddressHidden" name="DeliveryAddress" value="@Model.DeliveryAddress" />
+            <input type="hidden" id="selectedPaymentIdHidden" name="SelectedPaymentId" value="@Model.SelectedPaymentId" />
+            <input type="hidden" asp-for="Order.PointPickupId" id="pointPickupHidden" />
+
+            <div class="mb-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-basket me-2 text-primary"></i>Состав заказа</h6>
+                @if (Model.CartItems != null && Model.CartItems.Count > 0)
+                {
+                    foreach (var item in Model.CartItems)
+                    {
+                        <div class="mini-cart-item">
+                            <div class="mini-cart-emoji">🍔</div>
+                            <div class="mini-cart-info">
+                                <div class="mini-cart-name">@item.DishName</div>
+                                <div class="small text-muted">@item.SizeName</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="small text-muted">@item.Quantity шт.</div>
+                                <div class="mini-cart-price">@((item.Quantity * item.PriceAtAdd).ToString("C"))</div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="bonus-section">
+                <div class="fw-bold mb-2"><i class="bi bi-gift me-2"></i>Бонусы</div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Ваш баланс: <span class="fw-bold text-success">@Model.BonusBalance.ToString("N2") ₽</span></span>
+                    <span class="text-muted small">Макс. к списанию: <span id="maxBonusSpend">0</span> ₽</span>
+                </div>
+                <input type="range" class="bonus-range" id="bonusRange" min="0" max="0" value="0" step="1" oninput="updateBonusSpend(this.value)" />
+                <div class="d-flex justify-content-between mt-1">
+                    <small>0 ₽</small>
+                    <small><span id="bonusSpendDisplay">0</span> ₽</small>
+                </div>
+            </div>
+
+            <div class="mt-2 position-relative">
+                <label class="fw-bold small">🎫 Промокод</label>
+                <div class="input-group mt-1">
+                    <input type="text" id="promoCodeInput" class="form-control form-control-sm" placeholder="Введите промокод" style="border-radius:8px 0 0 8px;" autocomplete="off">
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="applyPromoCode()" style="border-radius:0 8px 8px 0;">Применить</button>
+                </div>
+                <div id="promoSuggestions" class="promo-suggestions-list" style="display: none;"></div>
+                <div id="promoMessage" class="small text-success mt-1" style="display:none;"></div>
+                <div id="promoError" class="small text-danger mt-1" style="display:none;"></div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-4">
+                <span class="fw-bold">Итого к оплате:</span>
+                <span class="fw-bold fs-4 text-success" id="totalAmount">@Model.TotalAmount.ToString("C")</span>
+            </div>
+
+            <div id="deliverySection" class="mb-4">
+                <div class="section-label">Ваш адрес для доставки</div>
+                <div id="savedAddressesContainer" style="max-width: 560px; margin: 0 auto;">
+                    @if (Model.UserAddresses != null && Model.UserAddresses.Any())
+                    {
+                        foreach (var addr in Model.UserAddresses.OrderByDescending(a => a.IsDefault).ThenBy(a => a.AddressDeliveryId))
+                        {
+                            var cleanAddress = addr.Address ?? "";
+                            var details = new List<string>();
+                            if (!string.IsNullOrEmpty(addr.Entrance)) details.Add($"подъезд {addr.Entrance}");
+                            if (addr.Floor.HasValue && addr.Floor > 0) details.Add($"этаж {addr.Floor}");
+                            if (!string.IsNullOrEmpty(addr.Domofon)) details.Add($"домофон {addr.Domofon}");
+                            if (!string.IsNullOrEmpty(addr.Apartment)) details.Add($"кв. {addr.Apartment}");
+                            var isDefault = addr.IsDefault;
+
+                            <div class="address-card @(isDefault ? "default" : "")" 
+                                 id="address-@addr.AddressDeliveryId" 
+                                 data-address-id="@addr.AddressDeliveryId"
+                                 data-city="@addr.City"
+                                 data-street="@cleanAddress"
+                                 data-entrance="@addr.Entrance"
+                                 data-floor="@addr.Floor"
+                                 data-apartment="@addr.Apartment"
+                                 data-domofon="@addr.Domofon"
+                                 data-comment="@addr.Comment"
+                                 data-isdefault="@isDefault.ToString().ToLower()">
+                                <div class="default-badge">
+                                    <input class="form-check-input default-checkbox" type="checkbox" data-address-id="@addr.AddressDeliveryId" @(isDefault ? "checked" : "") onchange="toggleDefaultAddress(this)" style="margin:0; width:14px; height:14px; cursor:pointer;" />
+                                    <span class="small fw-semibold">Основной</span>
+                                </div>
+                                <div class="address-card-top">
+                                    <span style="font-size:1.2rem;">📍</span>
+                                    <div class="address-info">
+                                        <div class="fw-bold" style="font-size:0.88rem;">@(string.IsNullOrEmpty(addr.City) ? "" : addr.City + ", ")@cleanAddress</div>
+                                        @if (details.Any()) { <div class="small text-muted">@string.Join(", ", details)</div> }
+                                    </div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(addr.Comment))
+                                {
+                                    <div class="address-comment"><i class="bi bi-chat-dots me-1"></i> @addr.Comment</div>
+                                }
+                                <div class="address-card-actions">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); editAddress(@addr.AddressDeliveryId)"><i class="bi bi-pencil me-1"></i> Изменить</button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation(); deleteAddress(@addr.AddressDeliveryId)"><i class="bi bi-trash me-1"></i> Удалить</button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state"><i class="bi bi-house-door"></i><div>У вас пока нет сохранённых адресов</div></div>
+                    }
+                </div>
+                <div class="delivery-actions">
+                    <button type="button" class="btn btn-outline-secondary" onclick="detectLocation()"><i class="bi bi-geo-alt me-1"></i> Определить местоположение</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="openNewAddressModal()"><i class="bi bi-plus-circle me-1"></i> Добавить адрес</button>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label fw-semibold small"><i class="bi bi-clock me-1"></i> Желаемое время доставки</label>
+                    <input asp-for="Order.PickupTime" type="datetime-local" class="form-control rounded-3" />
+                </div>
+            </div>
+
+            <div id="pickupSection" class="mb-4" style="display: none;">
+                <div class="section-label">Выберите точку самовывоза</div>
+                <div class="pickup-bonus-badge"><i class="bi bi-gift me-1"></i> При самовывозе +5% бонусов!</div>
+                
+                <div class="pickup-points-row" id="addressPills">
+                    @foreach (var point in pickupPoints)
+                    {
+                        <div class="address-pill @(Model.Order.PointPickupId == point.PointPickupId ? "selected" : "")" 
+                             data-point-id="@point.PointPickupId" 
+                             data-address="@point.Address" 
+                             data-lat="@point.Latitude" 
+                             data-lon="@point.Longitude"
+                             onclick="selectPickupPoint(@point.PointPickupId, '@point.Address', this, @(point.Latitude.HasValue ? point.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"), @(point.Longitude.HasValue ? point.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "null"))">
+                            <span class="pill-marker">📍</span>
+                            <div>
+                                <div class="pill-name">@point.PointName</div>
+                                <div class="pill-address">@point.Address</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="search-wrapper">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon"><i class="bi bi-search"></i></span>
+                        <input type="text" id="mapSearchInput" placeholder="Введите адрес в Астрахани...">
+                        <button type="button" class="btn btn-sm btn-outline-success ms-2" style="border-radius:8px;" onclick="searchOnMap()">Найти</button>
+                    </div>
+                    <div class="search-suggestions" id="searchSuggestions"></div>
+                </div>
+
+                <div class="map-container">
+                    <div id="yandexMap" style="width:100%; height:350px; border-radius:8px;"></div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="form-label fw-semibold small"><i class="bi bi-clock me-1"></i> Желаемое время получения</label>
+                    <input asp-for="Order.PickupTime" type="datetime-local" class="form-control rounded-3" />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="section-label">Способ оплаты</div>
+                <div id="paymentsContainer" style="max-width: 560px; margin: 0 auto;">
+                    @if (Model.UserPayments != null && Model.UserPayments.Any())
+                    {
+                        foreach (var pay in Model.UserPayments.OrderByDescending(p => p.IsDefault).ThenBy(p => p.PaymentId))
+                        {
+                            var maskedNumber = "•••• " + (pay.CardNumber?.Length >= 4 ? pay.CardNumber[^4..] : "****");
+                            var isDefault = pay.IsDefault;
+
+                            <div class="payment-card @(isDefault ? "default" : "")" 
+                                 id="payment-@pay.PaymentId" 
+                                 data-payment-id="@pay.PaymentId"
+                                 data-full-number="@pay.CardNumber" 
+                                 data-cvv="@pay.CardHolder"
+                                 data-expiry="@pay.ExpiryDate"
+                                 data-isdefault="@isDefault.ToString().ToLower()">
+                                <div class="default-badge">
+                                    <input class="form-check-input default-payment-checkbox" type="checkbox" data-payment-id="@pay.PaymentId" @(isDefault ? "checked" : "") onchange="toggleDefaultPayment(this)" style="margin:0; width:14px; height:14px; cursor:pointer;" />
+                                    <span class="small fw-semibold">Основной</span>
+                                </div>
+                                <div class="card-number fw-bold">@maskedNumber</div>
+                                <div class="card-expiry">Срок: @pay.ExpiryDate</div>
+                                <div class="payment-card-actions">
+                                    <button type="button" class="btn btn-sm btn-light" style="border-radius:8px;" onclick="event.stopPropagation(); editPayment(@pay.PaymentId)"><i class="bi bi-pencil me-1"></i> Изменить</button>
+                                    <button type="button" class="btn btn-sm btn-light" style="border-radius:8px;" onclick="event.stopPropagation(); deletePayment(@pay.PaymentId)"><i class="bi bi-trash me-1"></i> Удалить</button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state"><i class="bi bi-credit-card-2-front"></i><div>У вас пока нет сохранённых карт</div></div>
+                    }
+                </div>
+                <div class="payment-actions">
+                    <button type="button" class="btn btn-success" onclick="openNewPaymentModal()"><i class="bi bi-plus-circle me-1"></i> Добавить карту</button>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Order.Comment" class="form-label fw-semibold small"><i class="bi bi-chat-dots me-1"></i> Комментарий к заказу</label>
+                <textarea asp-for="Order.Comment" rows="2" class="form-control rounded-3" placeholder="Особые пожелания..."></textarea>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg py-3" id="submitOrderBtn">
+                    <i class="bi bi-check-lg me-2"></i> Подтвердить заказ — <span id="submitTotal">@Model.TotalAmount.ToString("C")</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal fade" id="addressModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px;">
+                <div class="modal-header bg-success text-white" style="border-radius:12px 12px 0 0;">
+                    <h5 class="modal-title w-100 text-center" id="addressModalTitle">Добавление адреса</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="editAddressId" value="0">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Город / Населенный пункт</label>
+                            <input type="text" id="editCity" class="form-control" style="border-radius:8px;" placeholder="Астрахань">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Улица</label>
+                            <input type="text" id="editStreet" class="form-control" style="border-radius:8px;" placeholder="ул. Ленина">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-bold">Дом</label>
+                            <input type="text" id="editHouse" class="form-control" style="border-radius:8px;" placeholder="15">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-bold">Корпус</label>
+                            <input type="text" id="editBuilding" class="form-control" style="border-radius:8px;" placeholder="1">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-bold">Подъезд</label>
+                            <input type="text" id="editEntrance" class="form-control" style="border-radius:8px;" placeholder="1">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-bold">Этаж</label>
+                            <input type="text" id="editFloor" class="form-control" style="border-radius:8px;" placeholder="1">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-bold">Домофон</label>
+                            <input type="text" id="editDomofon" class="form-control" style="border-radius:8px;" placeholder="11">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label fw-bold">Квартира</label>
+                            <input type="text" id="editApartment" class="form-control" style="border-radius:8px;" placeholder="11">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Комментарий курьеру</label>
+                            <textarea id="editComment" class="form-control" style="border-radius:8px;" rows="2" placeholder="Позвонить за 10 минут..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsDefault">
+                                <label class="form-check-label">Сделать основным адресом</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pb-4">
+                    <button type="button" class="btn btn-success px-4" style="border-radius:8px;" onclick="saveAddress()">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px;">
+                <div class="modal-header bg-success text-white" style="border-radius:12px 12px 0 0;">
+                    <h5 class="modal-title w-100 text-center" id="paymentModalTitle">Добавление карты</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" id="editPaymentId" value="0">
+                    <div class="mb-3"><label class="form-label fw-bold">Номер карты</label><input type="text" id="editCardNumber" class="form-control" style="border-radius:8px;" placeholder="1234 5678 9012 3456" maxlength="19"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">CVV/CVC</label><input type="text" id="editCardCvv" class="form-control" style="border-radius:8px;" placeholder="***" maxlength="3" inputmode="numeric" pattern="\d*"></div>
+                    <div class="mb-3"><label class="form-label fw-bold">Срок действия</label><input type="text" id="editExpiryDate" class="form-control" style="border-radius:8px;" placeholder="12/28" maxlength="5"></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" id="editPaymentIsDefault"><label class="form-check-label">Сделать основной картой</label></div>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pb-4">
+                    <button type="button" class="btn btn-success px-4" style="border-radius:8px;" onclick="savePayment()">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" style="border-radius:8px;" data-bs-dismiss="modal">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=4530ebd5-c3bd-4620-9f04-530dc4d2f48b&lang=ru_RU"></script>
+    <script>
+        const bonusBalance = @Model.BonusBalance.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+        const totalAmount = @Model.TotalAmount.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+        let currentBonusSpend = 0, currentPromoCode = '', promoDiscount = 0, maxBonusSpend = Math.floor(totalAmount * 0.3);
+        let currentTab = 'delivery';
+        let yandexMap = null, searchPlacemark = null;
+        let allMapLocations = [];
+        
+        // Массив для хранения всех промокодов пользователя
+        let allUserPromoCodes = [];
+
+        @foreach (var point in pickupPoints)
+        {
+            if (point.Latitude.HasValue && point.Longitude.HasValue)
+            {
+                @:allMapLocations.push({ id: @point.PointPickupId, name: '@point.PointName', address: '@point.Address', latitude: @point.Latitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture), longitude: @point.Longitude.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            }
+        }
+
+        function getToken() { return document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''; }
+
+        function showNotification(message, type) {
+            var n = document.createElement('div');
+            n.className = 'alert alert-' + (type === 'success' ? 'success' : 'danger') + ' position-fixed top-0 end-0 m-3';
+            n.style.zIndex = '9999';
+            n.style.borderRadius = '12px';
+            n.style.fontWeight = '600';
+            n.innerHTML = '<i class="bi bi-' + (type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill') + ' me-2"></i> ' + message;
+            document.body.appendChild(n);
+            setTimeout(function() { n.remove(); }, 3000);
+        }
+
+        // ========== ЗАГРУЗКА ПРОМОКОДОВ ПОЛЬЗОВАТЕЛЯ ==========
+        async function loadUserPromoCodes() {
+            try {
+                const response = await fetch('/Order/Create?handler=UserPromoCodes');
+                if (response.ok) {
+                    allUserPromoCodes = await response.json();
+                    console.log('Загружены промокоды:', allUserPromoCodes);
+                }
+            } catch (e) {
+                console.error('Ошибка загрузки промокодов:', e);
+            }
+        }
+
+        // ========== ПОКАЗ ПОДСКАЗОК ПРОМОКОДОВ ==========
+        function showPromoSuggestions() {
+            const input = document.getElementById('promoCodeInput');
+            const suggestionsDiv = document.getElementById('promoSuggestions');
+            if (!input || !suggestionsDiv) return;
+            
+            const query = input.value.trim().toUpperCase();
+            
+            if (!allUserPromoCodes.length || query.length === 0) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            const filtered = allUserPromoCodes.filter(function(code) {
+                return code.toUpperCase().includes(query);
+            });
+            
+            if (filtered.length === 0) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var code = filtered[i];
+                var escapedCode = code.replace(/'/g, "\\'");
+                html += '<div class="suggestion-item" onclick="selectPromoSuggestion(\'' + escapedCode + '\')">';
+                html += '<span class="suggestion-code">' + code + '</span>';
+                html += '<span class="suggestion-badge"><i class="bi bi-ticket-perforated"></i> Промокод</span>';
+                html += '</div>';
+            }
+            suggestionsDiv.innerHTML = html;
+            suggestionsDiv.style.display = 'block';
+        }
+
+        // ========== ВЫБОР ПРОМОКОДА ИЗ ПОДСКАЗКИ ==========
+        function selectPromoSuggestion(code) {
+            const input = document.getElementById('promoCodeInput');
+            const suggestionsDiv = document.getElementById('promoSuggestions');
+            if (input) input.value = code;
+            if (suggestionsDiv) suggestionsDiv.style.display = 'none';
+            applyPromoCode();
+        }
+
+        function initMap() {
+            const mapContainer = document.getElementById('yandexMap');
+            if (!mapContainer) return;
+            if (typeof ymaps === 'undefined') { setTimeout(initMap, 500); return; }
+            ymaps.ready(function() {
+                try {
+                    yandexMap = new ymaps.Map('yandexMap', {
+                        center: [46.3497, 48.0408],
+                        zoom: 13,
+                        controls: ['zoomControl', 'fullscreenControl'],
+                        suppressMapOpenBlock: true
+                    });
+                    if (allMapLocations && allMapLocations.length) {
+                        for (var i = 0; i < allMapLocations.length; i++) {
+                            var loc = allMapLocations[i];
+                            if (loc.latitude && loc.longitude) {
+                                var placemark = new ymaps.Placemark([loc.latitude, loc.longitude], {
+                                    balloonContentHeader: '<strong>' + loc.name + '</strong>',
+                                    balloonContentBody: loc.address,
+                                    hintContent: loc.name
+                                }, { preset: 'islands#redIcon' });
+                                placemark.events.add('click', function(locId, locAddress, locLat, locLon) {
+                                    return function() {
+                                        selectPickupPoint(locId, locAddress, null, locLat, locLon);
+                                    };
+                                }(loc.id, loc.address, loc.latitude, loc.longitude));
+                                yandexMap.geoObjects.add(placemark);
+                            }
+                        }
+                    }
+                } catch(e) { console.error('Map error:', e); }
+            });
+        }
+
+        function searchOnMap() {
+            var searchText = document.getElementById('mapSearchInput')?.value;
+            if (!searchText || !yandexMap) return;
+            if (searchPlacemark) yandexMap.geoObjects.remove(searchPlacemark);
+            ymaps.geocode(searchText + ', Астрахань', { results: 1 }).then(function(res) {
+                var geo = res.geoObjects.get(0);
+                if (geo) {
+                    var coords = geo.geometry.getCoordinates();
+                    var address = geo.getAddressLine();
+                    searchPlacemark = new ymaps.Placemark(coords, { balloonContentBody: address }, { preset: 'islands#blueIcon' });
+                    yandexMap.geoObjects.add(searchPlacemark);
+                    yandexMap.setCenter(coords, 15);
+                    searchPlacemark.balloon.open();
+                }
+            });
+        }
+
+        let debounceTimer;
+        var searchInputMap = document.getElementById('mapSearchInput');
+        if (searchInputMap) {
+            searchInputMap.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                var q = this.value.trim();
+                if (q.length < 2) { hideSuggestions(); return; }
+                debounceTimer = setTimeout(function() {
+                    ymaps.geocode('Астрахань, ' + q, { results: 5 }).then(function(res) {
+                        var items = res.geoObjects.toArray();
+                        var cont = document.getElementById('searchSuggestions');
+                        if (!items.length) { hideSuggestions(); return; }
+                        var html = '';
+                        for (var i = 0; i < items.length; i++) {
+                            var a = items[i].getAddressLine();
+                            var escapedA = a.replace(/'/g, "\\'");
+                            html += '<div class="suggestion-item" onclick="selectSuggestion(\'' + escapedA + '\')">📍 ' + a + '</div>';
+                        }
+                        cont.innerHTML = html;
+                        cont.classList.add('show');
+                    });
+                }, 300);
+            });
+            searchInputMap.addEventListener('keydown', function(e) { if (e.key === 'Enter') searchOnMap(); });
+            document.addEventListener('click', function(e) { if (!e.target.closest('.search-wrapper')) hideSuggestions(); });
+        }
+
+        function selectSuggestion(a) {
+            var si = document.getElementById('mapSearchInput');
+            if (si) si.value = a;
+            if (yandexMap) {
+                ymaps.geocode(a, { results: 1 }).then(function(res) {
+                    var geo = res.geoObjects.get(0);
+                    if (geo && yandexMap) {
+                        var coords = geo.geometry.getCoordinates();
+                        yandexMap.setCenter(coords, 15);
+                        if (searchPlacemark) yandexMap.geoObjects.remove(searchPlacemark);
+                        searchPlacemark = new ymaps.Placemark(coords, { balloonContentBody: a }, { preset: 'islands#blueIcon' });
+                        yandexMap.geoObjects.add(searchPlacemark);
+                        searchPlacemark.balloon.open();
+                    }
+                });
+            }
+            hideSuggestions();
+        }
+
+        function hideSuggestions() {
+            var c = document.getElementById('searchSuggestions');
+            if (c) { c.classList.remove('show'); c.innerHTML = ''; }
+        }
+
+        async function selectPickupPoint(pointId, address, element, lat, lon) {
+            try {
+                var resp = await fetch(window.location.pathname + '?handler=TogglePickupPoint', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                    body: JSON.stringify({ pointPickupId: pointId })
+                });
+                var result = await resp.json();
+                if (result.success) {
+                    if (result.selected) {
+                        var pills = document.querySelectorAll('.address-pill');
+                        for (var i = 0; i < pills.length; i++) {
+                            pills[i].classList.remove('selected');
+                        }
+                        if (element) element.classList.add('selected');
+                        document.getElementById('pointPickupHidden').value = pointId;
+                        showNotification('Точка самовывоза выбрана', 'success');
+                        
+                        if (yandexMap && lat && lon) {
+                            yandexMap.setCenter([lat, lon], 15);
+                            if (searchPlacemark) yandexMap.geoObjects.remove(searchPlacemark);
+                        }
+                    } else {
+                        if (element) element.classList.remove('selected');
+                        document.getElementById('pointPickupHidden').value = '';
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function handleCvvKeyDown(e) {
+            var input = e.target;
+            var key = e.key;
+            var currentRaw = input.getAttribute('data-raw-value') || '';
+            var start = input.selectionStart;
+            var end = input.selectionEnd;
+            var hasSelection = (start !== end);
+
+            if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Tab' || key === 'Home' || key === 'End') {
+                return;
+            }
+
+            if (key === 'Backspace') {
+                e.preventDefault();
+                var newRaw = currentRaw;
+                if (hasSelection) {
+                    newRaw = currentRaw.slice(0, start) + currentRaw.slice(end);
+                } else if (start > 0) {
+                    newRaw = currentRaw.slice(0, start - 1) + currentRaw.slice(start);
+                }
+                input.setAttribute('data-raw-value', newRaw);
+                var masked = '';
+                for (var i = 0; i < newRaw.length; i++) { masked += '*'; }
+                input.value = masked;
+                var newPos = hasSelection ? start : Math.max(0, start - 1);
+                input.setSelectionRange(newPos, newPos);
+                return;
+            }
+
+            if (key === 'Delete') {
+                e.preventDefault();
+                var newRaw = currentRaw;
+                if (hasSelection) {
+                    newRaw = currentRaw.slice(0, start) + currentRaw.slice(end);
+                } else if (start < currentRaw.length) {
+                    newRaw = currentRaw.slice(0, start) + currentRaw.slice(start + 1);
+                }
+                input.setAttribute('data-raw-value', newRaw);
+                var masked = '';
+                for (var i = 0; i < newRaw.length; i++) { masked += '*'; }
+                input.value = masked;
+                input.setSelectionRange(start, start);
+                return;
+            }
+
+            if (key.length === 1 && /[0-9]/.test(key)) {
+                e.preventDefault();
+                var newRaw = currentRaw;
+                if (hasSelection) {
+                    newRaw = currentRaw.slice(0, start) + key + currentRaw.slice(end);
+                } else {
+                    newRaw = currentRaw.slice(0, start) + key + currentRaw.slice(start);
+                }
+                if (newRaw.length > 3) { newRaw = newRaw.substring(0, 3); }
+                input.setAttribute('data-raw-value', newRaw);
+                var masked = '';
+                for (var i = 0; i < newRaw.length; i++) { masked += '*'; }
+                input.value = masked;
+                var newPos = hasSelection ? start + 1 : start + 1;
+                if (newPos > masked.length) newPos = masked.length;
+                input.setSelectionRange(newPos, newPos);
+                return;
+            }
+
+            if (key !== 'Tab' && key !== 'Shift' && key !== 'Control' && key !== 'Alt' && key !== 'Meta') {
+                e.preventDefault();
+            }
+        }
+
+        function reorderAddressCards() {
+            var container = document.getElementById('savedAddressesContainer');
+            if (!container) return;
+            var cards = Array.from(container.querySelectorAll('.address-card'));
+            cards.sort(function(a, b) {
+                var aDefault = a.classList.contains('default') ? 1 : 0;
+                var bDefault = b.classList.contains('default') ? 1 : 0;
+                return bDefault - aDefault;
+            });
+            for (var i = 0; i < cards.length; i++) {
+                container.appendChild(cards[i]);
+            }
+        }
+
+        function reorderPaymentCards() {
+            var container = document.getElementById('paymentsContainer');
+            if (!container) return;
+            var cards = Array.from(container.querySelectorAll('.payment-card'));
+            cards.sort(function(a, b) {
+                var aDefault = a.classList.contains('default') ? 1 : 0;
+                var bDefault = b.classList.contains('default') ? 1 : 0;
+                return bDefault - aDefault;
+            });
+            for (var i = 0; i < cards.length; i++) {
+                container.appendChild(cards[i]);
+            }
+        }
+
+        function updateMaxBonus() {
+            var s = totalAmount - promoDiscount;
+            maxBonusSpend = Math.min(Math.floor(s * 0.3), bonusBalance);
+            document.getElementById('maxBonusSpend').textContent = maxBonusSpend.toLocaleString();
+            document.getElementById('bonusRange').max = maxBonusSpend;
+            updateBonusSpend(document.getElementById('bonusRange').value);
+        }
+
+        function updateBonusSpend(v) {
+            currentBonusSpend = parseInt(v) || 0;
+            document.getElementById('bonusSpendDisplay').textContent = currentBonusSpend.toLocaleString();
+            document.getElementById('bonusToSpendHidden').value = currentBonusSpend;
+            recalculateTotal();
+        }
+
+        async function applyPromoCode() {
+            var c = document.getElementById('promoCodeInput').value.trim();
+            var promoMessageDiv = document.getElementById('promoMessage');
+            var promoErrorDiv = document.getElementById('promoError');
+            if (promoMessageDiv) promoMessageDiv.style.display = 'none';
+            if (promoErrorDiv) promoErrorDiv.style.display = 'none';
+            
+            if (!c) {
+                currentPromoCode = '';
+                promoDiscount = 0;
+                document.getElementById('promoCodeHidden').value = '';
+                updateMaxBonus();
+                recalculateTotal();
+                return;
+            }
+            try {
+                var r = await fetch('/Order/Create?handler=CheckPromoCode&code=' + encodeURIComponent(c));
+                var d = await r.json();
+                if (d.success) {
+                    currentPromoCode = c;
+                    promoDiscount = Math.round(totalAmount * d.discountPercent / 100);
+                    document.getElementById('promoCodeHidden').value = c;
+                    if (promoMessageDiv) {
+                        promoMessageDiv.textContent = 'Промокод применён! Скидка ' + d.discountPercent + '%';
+                        promoMessageDiv.style.display = 'block';
+                    }
+                    updateMaxBonus();
+                    recalculateTotal();
+                } else {
+                    if (promoErrorDiv) {
+                        promoErrorDiv.textContent = d.message || 'Промокод недействителен';
+                        promoErrorDiv.style.display = 'block';
+                    }
+                }
+            } catch(e) {
+                if (promoErrorDiv) {
+                    promoErrorDiv.textContent = 'Ошибка проверки';
+                    promoErrorDiv.style.display = 'block';
+                }
+            }
+        }
+
+        function recalculateTotal() {
+            var f = totalAmount - promoDiscount - currentBonusSpend;
+            var d = f > 0 ? f : 0;
+            document.getElementById('finalTotalHidden').value = d;
+            document.getElementById('totalAmount').textContent = d.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
+            document.getElementById('submitTotal').textContent = d.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
+        }
+
+        async function toggleDefaultAddress(checkbox) {
+            var addressId = parseInt(checkbox.getAttribute('data-address-id'));
+            var isChecked = checkbox.checked;
+            try {
+                var resp = await fetch(window.location.pathname + '?handler=ToggleDefaultAddress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                    body: JSON.stringify({ addressId: addressId, isDefault: isChecked })
+                });
+                if (!resp.ok) throw new Error('HTTP error ' + resp.status);
+                var result = await resp.json();
+                if (result.success) {
+                    if (isChecked) {
+                        var cards = document.querySelectorAll('.address-card');
+                        for (var i = 0; i < cards.length; i++) {
+                            cards[i].classList.remove('default');
+                            cards[i].setAttribute('data-isdefault', 'false');
+                        }
+                        var checkboxes = document.querySelectorAll('.default-checkbox');
+                        for (var i = 0; i < checkboxes.length; i++) {
+                            if (checkboxes[i] !== checkbox) checkboxes[i].checked = false;
+                        }
+                        var selectedCard = document.getElementById('address-' + addressId);
+                        if (selectedCard) {
+                            selectedCard.classList.add('default');
+                            selectedCard.setAttribute('data-isdefault', 'true');
+                            var city = selectedCard.getAttribute('data-city') || '';
+                            var fullAddress = selectedCard.getAttribute('data-street') || '';
+                            var entrance = selectedCard.getAttribute('data-entrance') || '';
+                            var floor = selectedCard.getAttribute('data-floor') || '';
+                            var apartment = selectedCard.getAttribute('data-apartment') || '';
+                            var domofon = selectedCard.getAttribute('data-domofon') || '';
+                            var details = [];
+                            if (entrance && entrance !== '') details.push('подъезд ' + entrance);
+                            if (floor && floor !== '0' && floor !== '') details.push('этаж ' + floor);
+                            if (domofon && domofon !== '') details.push('домофон ' + domofon);
+                            if (apartment && apartment !== '') details.push('кв. ' + apartment);
+                            var fullWithDetails = (city ? city + ', ' : '') + fullAddress + (details.length ? ', ' + details.join(', ') : '');
+                            document.getElementById('deliveryAddressHidden').value = fullWithDetails;
+                        }
+                    } else {
+                        var card = document.getElementById('address-' + addressId);
+                        if (card) {
+                            card.classList.remove('default');
+                            card.setAttribute('data-isdefault', 'false');
+                        }
+                    }
+                    reorderAddressCards();
+                    showNotification(isChecked ? 'Адрес установлен как основной' : 'Основной адрес снят', 'success');
+                } else {
+                    checkbox.checked = !isChecked;
+                    showNotification(result.message || 'Ошибка', 'danger');
+                }
+            } catch(e) {
+                console.error(e);
+                checkbox.checked = !isChecked;
+                showNotification('Ошибка при изменении основного адреса', 'danger');
+            }
+        }
+
+        async function toggleDefaultPayment(checkbox) {
+            var paymentId = parseInt(checkbox.getAttribute('data-payment-id'));
+            var isChecked = checkbox.checked;
+            try {
+                var resp = await fetch(window.location.pathname + '?handler=ToggleDefaultPayment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                    body: JSON.stringify({ paymentId: paymentId, isDefault: isChecked })
+                });
+                if (!resp.ok) throw new Error('HTTP error ' + resp.status);
+                var result = await resp.json();
+                if (result.success) {
+                    if (isChecked) {
+                        var cards = document.querySelectorAll('.payment-card');
+                        for (var i = 0; i < cards.length; i++) {
+                            cards[i].classList.remove('default');
+                            cards[i].setAttribute('data-isdefault', 'false');
+                        }
+                        var checkboxes = document.querySelectorAll('.default-payment-checkbox');
+                        for (var i = 0; i < checkboxes.length; i++) {
+                            if (checkboxes[i] !== checkbox) checkboxes[i].checked = false;
+                        }
+                        var selectedCard = document.getElementById('payment-' + paymentId);
+                        if (selectedCard) {
+                            selectedCard.classList.add('default');
+                            selectedCard.setAttribute('data-isdefault', 'true');
+                            document.getElementById('selectedPaymentIdHidden').value = paymentId;
+                        }
+                    } else {
+                        var card = document.getElementById('payment-' + paymentId);
+                        if (card) {
+                            card.classList.remove('default');
+                            card.setAttribute('data-isdefault', 'false');
+                        }
+                    }
+                    reorderPaymentCards();
+                    showNotification(isChecked ? 'Карта установлена как основная' : 'Основная карта снята', 'success');
+                } else {
+                    checkbox.checked = !isChecked;
+                    showNotification(result.message || 'Ошибка', 'danger');
+                }
+            } catch(e) {
+                console.error(e);
+                checkbox.checked = !isChecked;
+                showNotification('Ошибка при изменении основной карты', 'danger');
+            }
+        }
+
+        function editAddress(id) {
+            var card = document.getElementById('address-' + id);
+            if (!card) return;
+            document.getElementById('addressModalTitle').textContent = 'Изменение адреса';
+            document.getElementById('editAddressId').value = id;
+            var city = card.getAttribute('data-city') || '';
+            var fullAddress = card.getAttribute('data-street') || '';
+            var entrance = card.getAttribute('data-entrance') || '';
+            var floor = card.getAttribute('data-floor') || '';
+            var apartment = card.getAttribute('data-apartment') || '';
+            var domofon = card.getAttribute('data-domofon') || '';
+            var comment = card.getAttribute('data-comment') || '';
+            var isDefault = card.getAttribute('data-isdefault') === 'true';
+            var street = fullAddress, house = '', building = '';
+            if (fullAddress.includes(', д.')) {
+                var parts = fullAddress.split(', д.');
+                street = parts[0];
+                house = parts[1]?.split(', к.')[0] || '';
+                building = parts[1]?.split(', к.')[1] || '';
+            }
+            document.getElementById('editCity').value = city;
+            document.getElementById('editStreet').value = street;
+            document.getElementById('editHouse').value = house;
+            document.getElementById('editBuilding').value = building;
+            document.getElementById('editEntrance').value = entrance;
+            document.getElementById('editFloor').value = floor;
+            document.getElementById('editApartment').value = apartment;
+            document.getElementById('editDomofon').value = domofon;
+            document.getElementById('editComment').value = comment;
+            document.getElementById('editIsDefault').checked = isDefault;
+            var modal = new bootstrap.Modal(document.getElementById('addressModal'));
+            modal.show();
+        }
+
+        async function deleteAddress(id) {
+            if (!confirm('Удалить адрес?')) return;
+            try {
+                var resp = await fetch(window.location.pathname + '?handler=DeleteDeliveryAddress&id=' + id, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': getToken() }
+                });
+                var result = await resp.json();
+                if (result.success) location.reload();
+                else showNotification(result.message || 'Ошибка удаления', 'danger');
+            } catch(e) { showNotification('Ошибка удаления', 'danger'); }
+        }
+
+        function openNewAddressModal() {
+            document.getElementById('addressModalTitle').textContent = 'Добавление адреса';
+            document.getElementById('editAddressId').value = '0';
+            document.getElementById('editCity').value = '';
+            document.getElementById('editStreet').value = '';
+            document.getElementById('editHouse').value = '';
+            document.getElementById('editBuilding').value = '';
+            document.getElementById('editEntrance').value = '';
+            document.getElementById('editFloor').value = '';
+            document.getElementById('editApartment').value = '';
+            document.getElementById('editDomofon').value = '';
+            document.getElementById('editComment').value = '';
+            document.getElementById('editIsDefault').checked = false;
+            var modal = new bootstrap.Modal(document.getElementById('addressModal'));
+            modal.show();
+        }
+
+        async function saveAddress() {
+            var city = document.getElementById('editCity').value.trim();
+            var street = document.getElementById('editStreet').value.trim();
+            var house = document.getElementById('editHouse').value.trim();
+            if (!street || !house) { alert('Введите улицу и дом'); return; }
+            if (!city) { alert('Введите город'); return; }
+            var building = document.getElementById('editBuilding').value.trim();
+            var full = street + ', д. ' + house + (building ? ', к. ' + building : '');
+            var data = {
+                addressId: parseInt(document.getElementById('editAddressId').value) || null,
+                city: city,
+                street: full,
+                apartment: document.getElementById('editApartment').value.trim() || null,
+                entrance: document.getElementById('editEntrance').value.trim() || null,
+                floor: parseInt(document.getElementById('editFloor').value) || null,
+                domofon: document.getElementById('editDomofon').value.trim() || null,
+                comment: document.getElementById('editComment').value.trim() || null,
+                isDefault: document.getElementById('editIsDefault').checked
+            };
+            try {
+                var resp = await fetch(window.location.pathname + '?handler=SaveDeliveryAddress', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                    body: JSON.stringify(data)
+                });
+                var result = await resp.json();
+                if (result.success) {
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('addressModal'));
+                    if (modal) modal.hide();
+                    location.reload();
+                } else alert(result.message || 'Ошибка');
+            } catch(e) { alert('Ошибка при сохранении'); }
+        }
+
+        function maskCardNumber(input) {
+            var v = input.value.replace(/\D/g, '').substring(0, 16);
+            var f = '';
+            for (var i = 0; i < v.length; i++) {
+                if (i > 0 && i % 4 === 0) f += ' ';
+                f += v[i];
+            }
+            input.value = f;
+        }
+
+        function maskExpiryDate(input) {
+            var v = input.value.replace(/\D/g, '').substring(0, 4);
+            if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2);
+            input.value = v;
+        }
+
+        function openNewPaymentModal() {
+            document.getElementById('paymentModalTitle').textContent = 'Добавление карты';
+            document.getElementById('editPaymentId').value = '0';
+            document.getElementById('editCardNumber').value = '';
+            document.getElementById('editCardCvv').value = '';
+            document.getElementById('editCardCvv').setAttribute('data-raw-value', '');
+            document.getElementById('editExpiryDate').value = '';
+            document.getElementById('editPaymentIsDefault').checked = false;
+            var modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+
+        function editPayment(id) {
+            var card = document.getElementById('payment-' + id);
+            if (!card) { showNotification('Карта не найдена', 'danger'); return; }
+            document.getElementById('paymentModalTitle').textContent = 'Изменение карты';
+            document.getElementById('editPaymentId').value = id;
+            var fullNumber = card.getAttribute('data-full-number') || '';
+            var formatted = '';
+            for (var i = 0; i < fullNumber.length; i++) {
+                if (i > 0 && i % 4 === 0) formatted += ' ';
+                formatted += fullNumber[i];
+            }
+            document.getElementById('editCardNumber').value = formatted;
+            var rawCvv = card.getAttribute('data-cvv') || '';
+            var maskedCvv = '';
+            for (var j = 0; j < rawCvv.length; j++) { maskedCvv += '*'; }
+            document.getElementById('editCardCvv').value = maskedCvv;
+            document.getElementById('editCardCvv').setAttribute('data-raw-value', rawCvv);
+            document.getElementById('editExpiryDate').value = card.getAttribute('data-expiry') || '';
+            document.getElementById('editPaymentIsDefault').checked = card.classList.contains('default');
+            var modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+
+        async function deletePayment(id) {
+            if (!confirm('Удалить карту?')) return;
+            try {
+                var resp = await fetch(window.location.pathname + '?handler=DeletePayment&id=' + id, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': getToken() }
+                });
+                var result = await resp.json();
+                if (result.success) location.reload();
+                else showNotification(result.message || 'Ошибка удаления', 'danger');
+            } catch(e) { showNotification('Ошибка удаления', 'danger'); }
+        }
+
+        async function savePayment() {
+            var cn = document.getElementById('editCardNumber').value.replace(/\s/g, '');
+            var cv = document.getElementById('editCardCvv').getAttribute('data-raw-value') || '';
+            var ex = document.getElementById('editExpiryDate').value.trim();
+            if (!cn || cn.length < 16) { alert('Введите полный номер карты'); return; }
+            if (!cv || cv.length !== 3) { alert('Введите CVV (3 цифры)'); return; }
+            if (!ex || ex.length < 5) { alert('Введите срок действия'); return; }
+            var data = {
+                paymentId: parseInt(document.getElementById('editPaymentId').value) || null,
+                cardNumber: cn,
+                cardHolder: cv,
+                expiryDate: ex,
+                isDefault: document.getElementById('editPaymentIsDefault').checked
+            };
+            try {
+                var resp = await fetch(window.location.pathname + '?handler=SavePayment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getToken() },
+                    body: JSON.stringify(data)
+                });
+                var result = await resp.json();
+                if (result.success) {
+                    var modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+                    if (modal) modal.hide();
+                    location.reload();
+                } else alert(result.message || 'Ошибка');
+            } catch(e) { alert('Ошибка при сохранении'); }
+        }
+
+        function detectLocation() {
+            if (!navigator.geolocation) { alert('Геолокация не поддерживается'); return; }
+            navigator.geolocation.getCurrentPosition(function(position) {
+                fetch('https://geocode-maps.yandex.ru/1.x/?apikey=4530ebd5-c3bd-4620-9f04-530dc4d2f48b&geocode=' + position.coords.longitude + ',' + position.coords.latitude + '&format=json')
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        var address = data.response.GeoObjectCollection.featureMember[0]?.GeoObject?.metaDataProperty?.GeocoderMetaData?.text;
+                        if (address) {
+                            openNewAddressModal();
+                            setTimeout(function() {
+                                var parts = address.split(', ');
+                                var city = '', street = '', house = '', building = '';
+                                for (var i = 0; i < parts.length; i++) {
+                                    var part = parts[i];
+                                    if (part.includes('Астрахань') || part.includes('Москва') || (i === 1 && !part.match(/\d/))) city = part;
+                                    if (part.includes('улица') || part.includes('проспект') || part.includes('переулок')) street = part;
+                                    var houseMatch = part.match(/дом\s*(\d+[а-яА-Я]?)/i);
+                                    if (houseMatch) house = houseMatch[1];
+                                    var buildingMatch = part.match(/корпус\s*(\d+[а-яА-Я]?)/i);
+                                    if (buildingMatch) building = buildingMatch[1];
+                                }
+                                if (city) document.getElementById('editCity').value = city;
+                                if (street) document.getElementById('editStreet').value = street;
+                                if (house) document.getElementById('editHouse').value = house;
+                                if (building) document.getElementById('editBuilding').value = building;
+                                showNotification('Адрес определён, проверьте и сохраните', 'success');
+                            }, 500);
+                        } else alert('Не удалось определить адрес');
+                    }).catch(function() { alert('Ошибка геокодирования'); });
+            }, function(error) {
+                if (error.code === 1) alert('Разрешите доступ к геолокации');
+                else alert('Ошибка определения местоположения');
+            });
+        }
+
+        document.getElementById('deliveryTabs').addEventListener('click', function(e) {
+            e.preventDefault();
+            var target = e.target.closest('a');
+            if (!target) return;
+            var tab = target.dataset.tab;
+            if (!tab || tab === currentTab) return;
+            currentTab = tab;
+            var links = document.querySelectorAll('#deliveryTabs .nav-link');
+            for (var i = 0; i < links.length; i++) {
+                links[i].classList.remove('active');
+            }
+            target.classList.add('active');
+            if (tab === 'delivery') {
+                document.getElementById('deliverySection').style.display = 'block';
+                document.getElementById('pickupSection').style.display = 'none';
+            } else {
+                document.getElementById('pickupSection').style.display = 'block';
+                document.getElementById('deliverySection').style.display = 'none';
+                setTimeout(function() { if (yandexMap) yandexMap.container.fitToViewport(); }, 200);
+            }
+        });
+
+        // Скрыть подсказки промокодов при клике вне
+        document.addEventListener('click', function(e) {
+            var wrapper = document.querySelector('.mt-2.position-relative');
+            var suggestionsDiv = document.getElementById('promoSuggestions');
+            if (wrapper && !wrapper.contains(e.target)) {
+                if (suggestionsDiv) suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateMaxBonus();
+            recalculateTotal();
+            reorderAddressCards();
+            reorderPaymentCards();
+            initMap();
+            loadUserPromoCodes();
+            
+            var promoInput = document.getElementById('promoCodeInput');
+            if (promoInput) {
+                promoInput.addEventListener('input', function() {
+                    showPromoSuggestions();
+                });
+                promoInput.addEventListener('focus', function() {
+                    if (allUserPromoCodes.length > 0 && this.value.trim().length > 0) {
+                        showPromoSuggestions();
+                    }
+                });
+            }
+            
+            var cardNumberInput = document.getElementById('editCardNumber');
+            if (cardNumberInput) cardNumberInput.addEventListener('input', function() { maskCardNumber(this); });
+            var expiryDateInput = document.getElementById('editExpiryDate');
+            if (expiryDateInput) expiryDateInput.addEventListener('input', function() { maskExpiryDate(this); });
+            
+            var cvvInput = document.getElementById('editCardCvv');
+            if (cvvInput) {
+                cvvInput.setAttribute('data-raw-value', '');
+                cvvInput.addEventListener('keydown', handleCvvKeyDown);
+                cvvInput.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    var pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    var digitsOnly = pastedText.replace(/\D/g, '');
+                    if (digitsOnly.length > 3) digitsOnly = digitsOnly.substring(0, 3);
+                    this.setAttribute('data-raw-value', digitsOnly);
+                    var masked = '';
+                    for (var i = 0; i < digitsOnly.length; i++) { masked += '*'; }
+                    this.value = masked;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

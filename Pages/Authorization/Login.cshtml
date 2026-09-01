@@ -1,0 +1,337 @@
+﻿@page
+@model MaxFood.Pages.Authorization.LoginModel
+@{
+    ViewData["Title"] = "Авторизация";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Максимум еды - Авторизация</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Candara', system-ui, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+
+        .auth-header {
+            background: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+            .auth-header h1 {
+                color: #333;
+                font-size: 28px;
+                font-weight: 600;
+                margin: 0;
+            }
+
+            .auth-header p {
+                color: #666;
+                margin: 10px 0 0;
+                font-size: 14px;
+            }
+
+        .auth-body {
+            padding: 35px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-group-custom {
+            position: relative;
+        }
+
+            .input-group-custom input {
+                width: 100%;
+                padding: 12px 45px 12px 15px;
+                border: 2px solid #e0e0e0;
+                border-radius: 10px;
+                font-size: 16px;
+                transition: all 0.3s;
+                background: white;
+            }
+
+                .input-group-custom input:focus {
+                    outline: none;
+                    border-color: #28a745;
+                    box-shadow: 0 0 0 3px rgba(40,167,69,0.1);
+                }
+
+                .input-group-custom input.input-error {
+                    border-color: #dc3545;
+                }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+            font-size: 18px;
+        }
+
+            .toggle-password:hover {
+                color: #28a745;
+            }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+            .error-message.visible {
+                display: block;
+            }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+            .btn-login:hover {
+                background: #1f8b3a;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(40,167,69,0.3);
+            }
+
+            .btn-login:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+            .register-link a {
+                color: #28a745;
+                text-decoration: none;
+                font-weight: 500;
+            }
+
+                .register-link a:hover {
+                    text-decoration: underline;
+                }
+
+        .global-error {
+            background: #fee;
+            color: #dc3545;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+        }
+
+            .global-error.visible {
+                display: block;
+            }
+
+        @@media (max-width: 576px) {
+            .auth-body {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Авторизация</h1>
+                <p>Войдите в свой аккаунт</p>
+            </div>
+            <div class="auth-body">
+                <div id="globalError" class="global-error"></div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label">Телефон или Email</label>
+                        <div class="input-group-custom">
+                            <input type="text" id="login" name="Login" placeholder="+7 (999) 999-99-99 или example@mail.ru">
+                        </div>
+                        <div id="loginError" class="error-message"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Пароль</label>
+                        <div class="input-group-custom">
+                            <input type="password" id="password" name="Password" placeholder="Введите пароль">
+                            <button type="button" class="toggle-password" onclick="togglePassword('password')"><i class="bi bi-eye-slash"></i></button>
+                        </div>
+                        <div id="passwordError" class="error-message"></div>
+                    </div>
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe" name="RememberMe">
+                        <label class="form-check-label" for="rememberMe">Запомнить меня</label>
+                    </div>
+                    <button type="submit" class="btn-login" id="loginBtn" disabled>Войти</button>
+                </form>
+                <div class="register-link"><a href="/Registration/Register">Нет аккаунта? Зарегистрироваться</a></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function togglePassword(fieldId) {
+            var field = document.getElementById(fieldId);
+            var icon = field.nextElementSibling.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            }
+        }
+
+        function validateLogin(login) {
+            if (!login || login.trim() === '') {
+                return { valid: false, message: 'Введите телефон или email' };
+            }
+            var phonePattern = /^(\+7|8)[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d[\s\-\(\)]*\d$/;
+            var emailPattern = /^[^\s@@]+@@([^\s@@]+\.)+[^\s@@]+$/;
+            if (!phonePattern.test(login) && !emailPattern.test(login)) {
+                return { valid: false, message: 'Введите корректный телефон или email' };
+            }
+            return { valid: true, message: '' };
+        }
+
+        function validatePassword(password) {
+            if (!password || password === '') {
+                return { valid: false, message: 'Введите пароль' };
+            }
+            if (password.length < 6) {
+                return { valid: false, message: 'Пароль должен содержать минимум 6 символов' };
+            }
+            return { valid: true, message: '' };
+        }
+
+        function validateForm() {
+            var login = document.getElementById('login').value;
+            var password = document.getElementById('password').value;
+            var loginValidation = validateLogin(login);
+            var passwordValidation = validatePassword(password);
+            var loginError = document.getElementById('loginError');
+            var passwordError = document.getElementById('passwordError');
+            var loginInput = document.getElementById('login');
+            var passwordInput = document.getElementById('password');
+
+            if (!loginValidation.valid) {
+                loginError.textContent = loginValidation.message;
+                loginError.classList.add('visible');
+                loginInput.classList.add('input-error');
+            } else {
+                loginError.classList.remove('visible');
+                loginInput.classList.remove('input-error');
+            }
+
+            if (!passwordValidation.valid) {
+                passwordError.textContent = passwordValidation.message;
+                passwordError.classList.add('visible');
+                passwordInput.classList.add('input-error');
+            } else {
+                passwordError.classList.remove('visible');
+                passwordInput.classList.remove('input-error');
+            }
+
+            var isValid = loginValidation.valid && passwordValidation.valid;
+            var loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) loginBtn.disabled = !isValid;
+            return isValid;
+        }
+
+        document.getElementById('login').addEventListener('input', validateForm);
+        document.getElementById('password').addEventListener('input', validateForm);
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            var formData = new FormData();
+            formData.append('Login', document.getElementById('login').value);
+            formData.append('Password', document.getElementById('password').value);
+            formData.append('RememberMe', document.getElementById('rememberMe').checked);
+
+            try {
+                var response = await fetch('/Authorization/Login?handler=Login', {
+                    method: 'POST',
+                    body: formData
+                });
+                var result = await response.json();
+
+                if (result.success) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    var errorDiv = document.getElementById('globalError');
+                    errorDiv.textContent = result.message;
+                    errorDiv.classList.add('visible');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                var errorDiv = document.getElementById('globalError');
+                errorDiv.textContent = 'Ошибка соединения. Попробуйте позже.';
+                errorDiv.classList.add('visible');
+            }
+        });
+    </script>
+</body>
+</html>
